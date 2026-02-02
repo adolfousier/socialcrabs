@@ -11,6 +11,10 @@
 
 [Features](#features) • [Installation](#installation) • [Usage](#usage) • [API](#api) • [Configuration](#configuration)
 
+> ✅ **Tested & Working**: Instagram login, DM, like, comment, follow (Feb 2026)
+
+
+
 </div>
 
 ---
@@ -114,27 +118,34 @@ docker run -d \
 
 ```bash
 # Start the server
-clawsocial serve
+npm run cli -- serve
+
+# Login (headless - uses credentials from .env)
+npm run cli -- session login instagram --headless
+
+# Login (interactive - opens browser for manual login)
+npm run cli -- session login instagram
+
+# Check session status
+npm run cli -- session status
 
 # Instagram actions
-clawsocial ig like https://instagram.com/p/ABC123
-clawsocial ig follow username
-clawsocial ig comment https://instagram.com/p/ABC123 "Great post!"
-clawsocial ig dm username "Hello!"
+npm run cli -- ig like https://instagram.com/p/ABC123
+npm run cli -- ig follow username
+npm run cli -- ig comment https://instagram.com/p/ABC123 "Great post!"
+npm run cli -- ig dm username "Hello from ClawSocial!"
 
 # Twitter actions
-clawsocial twitter like https://twitter.com/user/status/123
-clawsocial twitter tweet "Hello world!"
-clawsocial twitter follow username
+npm run cli -- twitter like https://twitter.com/user/status/123
+npm run cli -- twitter tweet "Hello world!"
+npm run cli -- twitter follow username
 
 # LinkedIn actions
-clawsocial linkedin connect https://linkedin.com/in/username
-clawsocial linkedin message https://linkedin.com/in/username "Hi there"
+npm run cli -- linkedin connect https://linkedin.com/in/username
+npm run cli -- linkedin message https://linkedin.com/in/username "Hi there"
 
-# Session management
-clawsocial session login instagram
-clawsocial session status
-clawsocial session logout instagram
+# Logout
+npm run cli -- session logout instagram
 ```
 
 ### REST API
@@ -250,6 +261,14 @@ await claw.shutdown();
 | `DELAY_MAX_MS` | 4000 | Maximum delay between actions |
 | `TYPING_SPEED_MIN_MS` | 30 | Minimum typing delay per character |
 | `TYPING_SPEED_MAX_MS` | 100 | Maximum typing delay per character |
+| `INSTAGRAM_USERNAME` | - | Instagram username (for headless login) |
+| `INSTAGRAM_PASSWORD` | - | Instagram password (for headless login) |
+| `TWITTER_USERNAME` | - | Twitter username (for headless login) |
+| `TWITTER_PASSWORD` | - | Twitter password (for headless login) |
+| `LINKEDIN_EMAIL` | - | LinkedIn email (for headless login) |
+| `LINKEDIN_PASSWORD` | - | LinkedIn password (for headless login) |
+
+> ⚠️ **Note**: For passwords with special characters, wrap in quotes: `INSTAGRAM_PASSWORD="my*pass(word"`
 
 ### Rate Limits
 

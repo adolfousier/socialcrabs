@@ -70,26 +70,28 @@ export class LinkedInHandler extends BasePlatformHandler {
     try {
       const page = await this.getPage();
       
-      // Check for li_at cookie (LinkedIn auth cookie)
+      // Primary check: li_at cookie (LinkedIn auth token)
       const cookies = await page.context().cookies();
       const hasAuthCookie = cookies.some(c => c.name === 'li_at');
       if (hasAuthCookie) {
-        log.debug('LinkedIn auth cookie found');
+        log.debug('LinkedIn li_at auth cookie found');
         return true;
       }
       
-      // Check current URL - if on feed or home, we're logged in
+      // Check current URL - must be on feed AND not showing login form
       const url = page.url();
-      if (url.includes('/feed') || url.includes('/mynetwork') || url.includes('/messaging')) {
-        log.debug('LinkedIn logged-in URL detected');
-        return true;
+      const isOnLoggedInPage = url.includes('/feed') || url.includes('/mynetwork') || url.includes('/messaging') || url.includes('/in/');
+      
+      if (isOnLoggedInPage) {
+        // Make sure we're not seeing a login prompt
+        const hasLoginForm = await this.elementExists('#username, input[name="session_key"]');
+        if (!hasLoginForm) {
+          log.debug('LinkedIn logged-in URL detected without login form');
+          return true;
+        }
       }
       
-      // Check for logged-in nav elements on current page
-      const hasNav = await this.elementExists(SELECTORS.globalNav);
-      const hasMe = await this.elementExists(SELECTORS.navMe);
-      
-      return hasNav || hasMe;
+      return false;
     } catch (error) {
       log.error('Error checking LinkedIn login status', { error: String(error) });
       return false;

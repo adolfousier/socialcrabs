@@ -486,5 +486,28 @@ linkedin
     }
   });
 
+linkedin
+  .command('comment <url> <text>')
+  .description('Comment on a LinkedIn post')
+  .action(async (url: string, text: string) => {
+    try {
+      const claw = new ClawSocial({ browser: { headless: true } });
+      await claw.initialize();
+
+      const result = await claw.linkedin.comment({ url, text });
+
+      if (result.success) {
+        console.log(`✅ Commented on post: ${url}`);
+      } else {
+        console.log(`❌ Failed to comment: ${result.error}`);
+      }
+
+      await claw.shutdown();
+    } catch (error) {
+      console.error('Error:', error);
+      process.exit(1);
+    }
+  });
+
 // Parse arguments
 program.parse();

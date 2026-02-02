@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-02-02
+
+### Fixed
+- **LinkedIn Message button selector**: Fixed to target visible primary button with `:visible` pseudo-selector
+- **LinkedIn DM working**: Successfully tested with session persistence
+
+### Added  
+- **LinkedIn comment CLI command**: Added `linkedin comment <url> <text>` to CLI
+
+### Changed
+- LinkedIn selectors now use `button.artdeco-button--primary[aria-label^="Message "]:visible` to avoid matching sticky header
+
 ## [0.1.2] - 2026-02-02
 
 ### Added

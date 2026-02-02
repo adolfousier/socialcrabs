@@ -36,7 +36,7 @@ const SELECTORS = {
   pendingButton: 'button[aria-label*="Pending"]',
   followButton: 'button[aria-label*="Follow"]',
   followingButton: 'button[aria-label*="Following"]',
-  messageButton: 'button[aria-label*="Message"]',
+  messageButton: 'button.artdeco-button--primary[aria-label^="Message "]:visible',
   
   // Connection modal
   addNoteButton: 'button[aria-label*="Add a note"]',

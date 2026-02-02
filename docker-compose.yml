@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  clawsocial:
+    build: .
+    container_name: clawsocial
+    restart: unless-stopped
+    ports:
+      - "3847:3847"
+      - "3848:3848"
+    volumes:
+      - ./sessions:/app/sessions
+      - ./browser-data:/app/browser-data
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - PORT=3847
+      - WS_PORT=3848
+      - HOST=0.0.0.0
+      - BROWSER_HEADLESS=true
+      - LOG_LEVEL=info
+      # Add your API key for authentication (optional)
+      # - API_KEY=your-api-key-here
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3847/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

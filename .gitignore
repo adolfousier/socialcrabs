@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment files (NEVER commit these)
+.env
+.env.local
+.env.*.local
+
+# Browser data
+browser-data/
+user-data/
+sessions/
+cookies/
+*.session.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Playwright
+playwright-report/
+playwright/.cache/
+test-results/
+
+# Temp files
+tmp/
+temp/
+*.tmp
+
+# Credentials (NEVER commit)
+*.pem
+*.key
+*.crt
+credentials/
+auth/
+tokens/

@@ -130,17 +130,51 @@ ClawSocial implements:
 
 ---
 
-## Rate Limits (Configured Defaults)
+## Rate Limits (Tested & Recommended)
+
+### Warm-up Period (Days 1-7)
+
+Start extremely slow. Platforms flag new automation patterns.
+
+| Day | Like | Comment | Follow | DM |
+|-----|------|---------|--------|-----|
+| 1 | 1 | 1 | 0 | 1 |
+| 2 | 2 | 2 | 1 | 1 |
+| 3 | 3 | 3 | 1 | 2 |
+| 4-7 | 5 | 5 | 2 | 3 |
+
+**Delays between actions:** 30-60 minutes minimum
+
+### After Warm-up (Day 8+)
 
 | Platform | Like/day | Comment/day | Follow/day | DM/day |
 |----------|----------|-------------|------------|--------|
-| Instagram | 100 | 30 | 50 | 50 |
-| LinkedIn | 100 | 30 | 15* | 40 |
-| Twitter | 100 | - | 50 | - |
+| Instagram | 10-15 | 5-10 | 5 | 5 |
+| LinkedIn | 10-15 | 5-10 | 3* | 5 |
+| Twitter | 20-30 | 20** | 10 | 5 |
 
 *Connection requests
+**Spread across 3 time periods (e.g., 7 interactions × 3 = 21/day)
 
-These are conservative defaults. Actual safe limits may be lower.
+### Time Distribution
+
+Don't do all actions at once. Spread across the day:
+
+```
+Morning:   7 interactions (9-11 AM)
+Afternoon: 7 interactions (2-4 PM)  
+Evening:   7 interactions (7-9 PM)
+```
+
+### What We Actually Tested
+
+| Platform | Action | Tested Volume | Duration |
+|----------|--------|---------------|----------|
+| Twitter (bird) | Reply/engage | 21/day (7×3) | 5+ days ✅ |
+| Instagram | Like/Comment/DM | 1 each | 1 day |
+| LinkedIn | Like/Comment/DM | 1 each | 1 day |
+
+⚠️ **Instagram and LinkedIn limits above are theoretical.** Only basic functionality tested, not sustained automation.
 
 ---
 

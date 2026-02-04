@@ -486,9 +486,34 @@ export class LinkedInHandler extends BasePlatformHandler {
       await this.navigate(payload.profileUrl);
       await this.think();
 
-      // Check for Connect button FIRST (LinkedIn shows Message for 2nd degree too)
-      // Look for main profile Connect button (not sidebar suggestions)
       const page = await this.getPage();
+      
+      // FIRST: Wait for profile to fully load before any button detection
+      // Use a retry loop because Playwright locators can be slow to detect new elements
+      let profileLoaded = false;
+      for (let attempt = 0; attempt < 10 && !profileLoaded; attempt++) {
+        await page.waitForTimeout(1000);
+        const messageCount = await page.locator('button[aria-label^="Message "]').count();
+        const moreCount = await page.locator('button[aria-label="More actions"]').count();
+        if (messageCount > 0 || moreCount > 0) {
+          profileLoaded = true;
+          log.info('Profile header loaded', { attempt: attempt + 1, messageCount, moreCount });
+        }
+      }
+      
+      if (!profileLoaded) {
+        log.warn('Profile header not detected after 10 attempts');
+        await page.screenshot({ path: '/tmp/linkedin-connect-debug.png' });
+        const currentUrl = page.url();
+        log.info('Debug info', { url: currentUrl, screenshot: '/tmp/linkedin-connect-debug.png' });
+        if (currentUrl.includes('/login') || currentUrl.includes('/authwall')) {
+          return this.createErrorResult('connect', payload.profileUrl, 'Not logged in - session may have expired', startTime, status);
+        }
+      }
+      await page.waitForTimeout(500); // Small buffer after detection
+
+      // Check for Connect button (LinkedIn shows Message for 2nd degree too)
+      // Look for main profile Connect button (not sidebar suggestions)
       
       // Find Connect buttons and check if any are for the main profile (must be visible)
       const connectButtons = await page.locator('button:has-text("Connect")').all();
@@ -547,11 +572,78 @@ export class LinkedInHandler extends BasePlatformHandler {
       
       log.info('Button detection', { hasMainConnectButton, hasMainFollowButton });
 
+      // Check for "More" button (for 3rd degree connections where Connect is hidden in dropdown)
+      // Iterate through all More buttons to find a visible main profile one
+      const moreButtons = await page.locator('button[aria-label="More actions"]').all();
+      let moreButton = null;
+      
+      for (const btn of moreButtons) {
+        try {
+          const isVisible = await btn.isVisible();
+          if (!isVisible) continue;
+          
+          const classes = await btn.getAttribute('class');
+          // Skip sticky header buttons
+          if (classes?.includes('sticky-header')) continue;
+          
+          moreButton = btn;
+          log.debug('Found visible More button');
+          break;
+        } catch {
+          // Skip problematic buttons
+        }
+      }
+      
+      const hasMoreButton = moreButton !== null;
+      log.info('More button detection', { hasMoreButton, totalMoreButtons: moreButtons.length });
+
       // If Connect button exists, person is NOT connected - proceed to connect
       if (hasMainConnectButton) {
         log.info('Found main profile Connect button - not connected yet');
+      } else if (hasMoreButton && moreButton) {
+        // For 3rd degree connections: Connect is hidden in "More" dropdown
+        log.info('No direct Connect button, checking More dropdown...');
+        
+        // Click More to reveal dropdown
+        await moreButton.click();
+        await this.pause();
+        
+        // Look for Connect in the dropdown
+        const dropdownConnect = page.locator('.artdeco-dropdown__content:visible').locator('div:has-text("Connect"), span:has-text("Connect")').first();
+        const hasDropdownConnect = await dropdownConnect.isVisible().catch(() => false);
+        
+        if (hasDropdownConnect) {
+          log.info('Found Connect in More dropdown - clicking...');
+          await dropdownConnect.click();
+          await this.pause();
+          
+          // Handle connection modal (add note if provided)
+          if (payload.note && await this.elementExists(SELECTORS.addNoteButton)) {
+            await this.clickHuman(SELECTORS.addNoteButton);
+            await this.pause();
+            if (await this.waitForElement(SELECTORS.noteInput, 5000)) {
+              await page.fill(SELECTORS.noteInput, payload.note);
+              await this.pause();
+            }
+          }
+          
+          // Send connection request
+          if (await this.elementExists(SELECTORS.sendButton)) {
+            await this.clickHuman(SELECTORS.sendButton);
+          }
+          
+          await this.delay();
+          await this.recordAction('follow');
+          
+          log.info('Successfully sent LinkedIn connection request (via More dropdown)');
+          return this.createResult('connect', payload.profileUrl, startTime, status);
+        } else {
+          // Close dropdown and continue to other checks
+          await page.keyboard.press('Escape');
+          await this.pause();
+        }
       } else {
-        // No Connect button - check if already connected or pending
+        // No Connect button, no More button - check if already connected or pending
         if (await this.elementExists(SELECTORS.pendingButton)) {
           log.info('Connection request already pending');
           return this.createResult('connect', payload.profileUrl, startTime, status);

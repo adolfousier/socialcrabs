@@ -1,4 +1,4 @@
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+2![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 ![Node](https://img.shields.io/badge/Node-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-1.48+-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)
@@ -6,6 +6,9 @@
 # ClawSocial
 
 **Social media automation with human-like behavior simulation**
+
+ClawSocial is a robust, production-ready social media automation platform built with Playwright. It simulates human-like behavior to interact with Instagram, Twitter/X, and LinkedIn safely and efficiently.
+
 
 [Features](#features) • [Installation](#installation) • [Usage](#usage) • [API](#api) • [Configuration](#configuration)
 
@@ -20,8 +23,8 @@
 > | Platform | Status |
 > |----------|--------|
 > | Twitter/X | 🟡 Use [`bird`](https://github.com/adolfousier/bird) CLI instead |
-> | Instagram | 🔴 Experimental - not production ready |
-> | LinkedIn | 🔴 Experimental - not production ready |
+> | Instagram | 🔴 Experimental - testing in production |
+> | LinkedIn | 🔴 Experimental - testing in production |
 
 ---
 

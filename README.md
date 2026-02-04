@@ -488,18 +488,39 @@ TWITTER_PASSWORD="your_password"
 
 ### Rate Limits
 
-Configurable via environment or code. Defaults:
+> ⚠️ **Important**: New accounts need a warm-up period. See [Warm-Up Guide](docs/WARM_UP_GUIDE.md) for the full 5-week scaling schedule.
+
+#### Production Limits (After 5-Week Warm-Up)
 
 | Platform | Action | Default | Env Variable |
 |----------|--------|---------|--------------|
-| Instagram | Like | 100/day | `IG_RATE_LIKE` |
-| Instagram | Comment | 30/day | `IG_RATE_COMMENT` |
-| Instagram | Follow | 50/day | `IG_RATE_FOLLOW` |
-| Instagram | DM | 50/day | `IG_RATE_DM` |
-| LinkedIn | Like | 100/day | `LI_RATE_LIKE` |
-| LinkedIn | Comment | 30/day | `LI_RATE_COMMENT` |
-| LinkedIn | Connect | 15/day | `LI_RATE_CONNECT` |
-| LinkedIn | Message | 40/day | `LI_RATE_MESSAGE` |
+| Instagram | Like | 100/day | `RATE_LIMIT_INSTAGRAM_LIKE` |
+| Instagram | Comment | 30/day | `RATE_LIMIT_INSTAGRAM_COMMENT` |
+| Instagram | Follow | 50/day | `RATE_LIMIT_INSTAGRAM_FOLLOW` |
+| Instagram | DM | 50/day | `RATE_LIMIT_INSTAGRAM_DM` |
+| LinkedIn | Like | 100/day | `RATE_LIMIT_LINKEDIN_LIKE` |
+| LinkedIn | Comment | 30/day | `RATE_LIMIT_LINKEDIN_COMMENT` |
+| LinkedIn | Connect | 15/day | `RATE_LIMIT_LINKEDIN_CONNECT` |
+| LinkedIn | Message | 40/day | `RATE_LIMIT_LINKEDIN_MESSAGE` |
+
+#### Week 1 Warm-Up Limits (New Accounts)
+
+| Action | Max/Day |
+|--------|---------|
+| Likes | 20 |
+| Comments | 14 |
+| Follows/Connects | 10 |
+| DMs | 10 |
+
+Increase by 25% each week until reaching production limits at week 5.
+
+#### Action Timing Rules
+
+- **Minimum 10 minutes** between comments
+- **Minimum 15 minutes** between connection requests
+- Use **odd minutes** (:03, :17, :33, :51) not round numbers
+- **Vary gaps** — don't make timing predictable
+- **Distribute** actions across active hours (8am-10pm)
 
 ### Notifications
 

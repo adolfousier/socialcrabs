@@ -31,12 +31,12 @@ const SELECTORS = {
   commentInput: 'div.ql-editor[data-placeholder*="Add a comment"], div[contenteditable="true"]',
   commentSubmit: 'button.comments-comment-box__submit-button',
   
-  // Profile actions
-  connectButton: 'button[aria-label*="Connect"]',
-  pendingButton: 'button[aria-label*="Pending"]',
-  followButton: 'button[aria-label*="Follow"]',
+  // Profile actions (case-insensitive matching)
+  connectButton: 'button[aria-label*="connect"], button[aria-label*="Connect"], button:has-text("Connect"):not([aria-label*="Invite"])',
+  pendingButton: 'button[aria-label*="Pending"], button[aria-label*="pending"]',
+  followButton: 'button[aria-label*="Follow"]:not([aria-label*="Following"]), button:has-text("Follow"):not(:has-text("Following"))',
   followingButton: 'button[aria-label*="Following"]',
-  messageButton: 'button.artdeco-button--primary[aria-label^="Message "]:visible',
+  messageButton: 'button.artdeco-button--primary[aria-label^="Message "]:visible, button[aria-label*="Message"]:visible',
   
   // Connection modal
   addNoteButton: 'button[aria-label*="Add a note"]',
@@ -497,35 +497,60 @@ export class LinkedInHandler extends BasePlatformHandler {
         return this.createResult('connect', payload.profileUrl, startTime, status);
       }
 
-      if (!(await this.elementExists(SELECTORS.connectButton))) {
-        return this.createErrorResult('connect', payload.profileUrl, 'Connect button not found', startTime, status);
+      // Check if already following
+      if (await this.elementExists(SELECTORS.followingButton)) {
+        log.info('Already following this profile');
+        return this.createResult('connect', payload.profileUrl, startTime, status);
       }
 
-      await this.clickHuman(SELECTORS.connectButton);
-      await this.pause();
+      // Try Connect button first
+      const hasConnectButton = await this.elementExists(SELECTORS.connectButton);
+      const hasFollowButton = await this.elementExists(SELECTORS.followButton);
 
-      // Add note if provided
-      if (payload.note && await this.elementExists(SELECTORS.addNoteButton)) {
-        await this.clickHuman(SELECTORS.addNoteButton);
+      if (!hasConnectButton && !hasFollowButton) {
+        return this.createErrorResult('connect', payload.profileUrl, 'Neither Connect nor Follow button found', startTime, status);
+      }
+
+      if (hasConnectButton) {
+        // Standard connect flow
+        log.info('Found Connect button, sending connection request');
+        await this.clickHuman(SELECTORS.connectButton);
         await this.pause();
 
-        if (await this.waitForElement(SELECTORS.noteInput, 5000)) {
-          const page = await this.getPage();
-          await page.fill(SELECTORS.noteInput, payload.note);
+        // Add note if provided
+        if (payload.note && await this.elementExists(SELECTORS.addNoteButton)) {
+          await this.clickHuman(SELECTORS.addNoteButton);
           await this.pause();
+
+          if (await this.waitForElement(SELECTORS.noteInput, 5000)) {
+            const page = await this.getPage();
+            await page.fill(SELECTORS.noteInput, payload.note);
+            await this.pause();
+          }
         }
+
+        // Send connection request
+        if (await this.elementExists(SELECTORS.sendButton)) {
+          await this.clickHuman(SELECTORS.sendButton);
+        }
+
+        await this.delay();
+        await this.recordAction('follow');
+        
+        log.info('Successfully sent LinkedIn connection request');
+        return this.createResult('connect', payload.profileUrl, startTime, status);
+      } else if (hasFollowButton) {
+        // Fallback to Follow for profiles with Follow-first mode
+        log.info('No Connect button, falling back to Follow');
+        await this.clickHuman(SELECTORS.followButton);
+        await this.delay();
+        await this.recordAction('follow');
+        
+        log.info('Successfully followed LinkedIn profile (Follow-first mode)');
+        return this.createResult('follow', payload.profileUrl, startTime, status);
       }
 
-      // Send connection request
-      if (await this.elementExists(SELECTORS.sendButton)) {
-        await this.clickHuman(SELECTORS.sendButton);
-      }
-
-      await this.delay();
-      await this.recordAction('follow');
-      
-      log.info('Successfully sent LinkedIn connection request');
-      return this.createResult('connect', payload.profileUrl, startTime, status);
+      return this.createErrorResult('connect', payload.profileUrl, 'Could not complete action', startTime, status);
     } catch (error) {
       log.error('Error sending LinkedIn connection request', { error: String(error) });
       return this.createErrorResult('connect', payload.profileUrl, String(error), startTime, status);

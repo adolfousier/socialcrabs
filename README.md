@@ -1,19 +1,13 @@
-# ClawSocial
-
-<div align="center">
-
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 ![Node](https://img.shields.io/badge/Node-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-1.48+-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)
 
+# ClawSocial
+
 **Social media automation with human-like behavior simulation**
 
 [Features](#features) • [Installation](#installation) • [Usage](#usage) • [API](#api) • [Configuration](#configuration)
-
-
-
-</div>
 
 ---
 
@@ -55,6 +49,9 @@ npm run cli -- linkedin like <post-url>
 npm run cli -- linkedin comment <post-url> "Your comment"
 npm run cli -- linkedin dm <profile-url> "Your message"
 npm run cli -- linkedin connect <profile-url>
+npm run cli -- linkedin search <query>              # Search for posts/articles
+npm run cli -- linkedin engage --query=<query>     # Full engagement session
+npm run cli -- linkedin engage --skip-search       # Use existing data
 ```
 
 ### Human-like Behavior (Built-in)

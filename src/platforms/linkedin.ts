@@ -642,4 +642,53 @@ export class LinkedInHandler extends BasePlatformHandler {
       return { username };
     }
   }
+
+  /**
+   * Search LinkedIn for content and return HTML + extracted articles
+   */
+  async search(query: string): Promise<{
+    html: string;
+    posts: Array<{ url: string; urn: string; preview?: string }>;
+  }> {
+    try {
+      log.info('Searching LinkedIn', { query });
+
+      const page = await this.getPage();
+      const searchUrl = `${this.baseUrl}/search/results/content/?keywords=${encodeURIComponent(query)}&sortBy=%22date_posted%22`;
+      
+      await this.navigate(searchUrl);
+      await this.think();
+
+      // Scroll to load more content
+      for (let i = 0; i < 5; i++) {
+        await page.evaluate('window.scrollBy(0, 600)');
+        await this.think();
+      }
+
+      // Get HTML
+      const html = await page.content();
+
+      // Extract posts from HTML (feed/update URLs, not pulse articles)
+      const posts: Array<{ url: string; urn: string; preview?: string }> = [];
+      const seen = new Set<string>();
+
+      // Match LinkedIn post URLs (feed/update/urn:li:share:... or ugcPost:... or activity:...)
+      const postRegex = /href="(https:\/\/www\.linkedin\.com\/feed\/update\/(urn:li:(?:share|ugcPost|activity):[0-9]+)[^"]*)"/g;
+      let match;
+      while ((match = postRegex.exec(html)) !== null) {
+        const fullUrl = match[1].split('?')[0]; // Remove tracking params
+        const urn = match[2];
+        if (seen.has(urn)) continue;
+        seen.add(urn);
+
+        posts.push({ url: fullUrl, urn });
+      }
+
+      log.info('LinkedIn search complete', { query, postsFound: posts.length });
+      return { html, posts };
+    } catch (error) {
+      log.error('Error searching LinkedIn', { error: String(error) });
+      return { html: '', posts: [] };
+    }
+  }
 }

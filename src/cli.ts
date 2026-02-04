@@ -69,7 +69,7 @@ session
       const username = options.username || process.env[`${envPrefix}_USERNAME`] || process.env[`${envPrefix}_EMAIL`];
       const password = options.password || process.env[`${envPrefix}_PASSWORD`];
       
-      const headless = options.headless === true || (username && password);
+      const headless = options.headless === true || !!(username && password);
       
       const claw = new ClawSocial({
         browser: { headless },
@@ -503,6 +503,61 @@ linkedin
       }
 
       await claw.shutdown();
+    } catch (error) {
+      console.error('Error:', error);
+      process.exit(1);
+    }
+  });
+
+linkedin
+  .command('search <query>')
+  .description('Search LinkedIn for content')
+  .option('-o, --output <file>', 'Save HTML to file')
+  .action(async (query: string, options: { output?: string }) => {
+    try {
+      const claw = new ClawSocial({ browser: { headless: true } });
+      await claw.initialize();
+
+      const result = await claw.linkedin.search(query);
+
+      console.log(`Found ${result.posts.length} posts:`);
+      for (const post of result.posts) {
+        console.log(`  - ${post.urn}`);
+        console.log(`    ${post.url}`);
+      }
+
+      if (options.output) {
+        const fs = await import('fs');
+        fs.writeFileSync(options.output, result.html);
+        console.log(`\nHTML saved to: ${options.output}`);
+      }
+
+      await claw.shutdown();
+    } catch (error) {
+      console.error('Error:', error);
+      process.exit(1);
+    }
+  });
+
+linkedin
+  .command('engage')
+  .description('Run full engagement session (search + like + comment)')
+  .option('-q, --query <query>', 'Search query', 'openclaw')
+  .option('--dry-run', 'Show what would be done without doing it')
+  .option('--skip-search', 'Skip the search step, use existing articles')
+  .action(async (options: { query: string; dryRun?: boolean; skipSearch?: boolean }) => {
+    try {
+      const args = ['scripts/engage.ts', `--query=${options.query}`];
+      if (options.dryRun) args.push('--dry-run');
+      if (options.skipSearch) args.push('--skip-search');
+      
+      const { spawn } = await import('child_process');
+      const child = spawn('npx', ['tsx', ...args], {
+        cwd: process.cwd(),
+        stdio: 'inherit',
+      });
+      
+      child.on('exit', (code) => process.exit(code || 0));
     } catch (error) {
       console.error('Error:', error);
       process.exit(1);

@@ -1,165 +1,188 @@
-2![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 ![Node](https://img.shields.io/badge/Node-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-1.48+-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)
 
-# ClawSocial
 
-**Social media automation with human-like behavior simulation**
+# 🐾 ClawSocial
 
-ClawSocial is a robust, production-ready social media automation platform built with Playwright. It simulates human-like behavior to interact with Instagram, Twitter/X, and LinkedIn safely and efficiently.
+**Production-ready social media automation with human-like behavior simulation**
 
+*Automate Instagram, Twitter/X, and LinkedIn interactions efficiently. Reddit comming soon!*
 
-[Features](#features) • [Installation](#installation) • [Usage](#usage) • [API](#api) • [Configuration](#configuration)
-
----
-
-## ⚠️ Important Notice
-
-> **This software is for educational and experimental purposes only.**
-> 
-> Read **[AUTOMATION_RULES.md](./AUTOMATION_RULES.md)** before using.
-> 
-> | Platform | Status |
-> |----------|--------|
-> | Twitter/X | 🟡 Use [`bird`](https://github.com/adolfousier/bird) CLI instead |
-> | Instagram | 🔴 Experimental - testing in production |
-> | LinkedIn | 🔴 Experimental - testing in production |
+[Features](#-features) • [Architecture](#-architecture) • [Workflow](#-workflow) • [Installation](#-installation) • [Usage](#-usage) • [API](#-api-reference) • [Configuration](#-configuration)
 
 ---
 
-## 🤖 Agent Instructions (OpenClaw/AI)
+## 📑 Table of Contents
 
-> **If you're an AI agent reading this**, here's how to use ClawSocial:
-
-### Quick Commands
-
-```bash
-# Login (headless - uses .env credentials)
-npm run cli -- session login <platform> --headless
-
-# Check session status
-npm run cli -- session status
-
-# Instagram actions
-npm run cli -- ig like <post-url>
-npm run cli -- ig comment <post-url> "Your comment"
-npm run cli -- ig dm <username> "Your message"
-npm run cli -- ig follow <username>
-
-# LinkedIn actions
-npm run cli -- linkedin like <post-url>
-npm run cli -- linkedin comment <post-url> "Your comment"
-npm run cli -- linkedin dm <profile-url> "Your message"
-npm run cli -- linkedin connect <profile-url>
-npm run cli -- linkedin search <query>              # Search for posts/articles
-npm run cli -- linkedin engage --query=<query>     # Full engagement session
-npm run cli -- linkedin engage --skip-search       # Use existing data
-```
-
-### Human-like Behavior (Built-in)
-
-ClawSocial automatically simulates human behavior:
-- **Warm-up browsing**: Scrolls feed 3-5 times before any action
-- **Random delays**: 1.5-4s between actions
-- **Natural typing**: 30-100ms per character
-- **Thinking pauses**: 2-5s before complex actions
-
-### Multi-Action Sequences
-
-When performing multiple actions (e.g., DM then comment), use `actionCooldown()`:
-- Default: 2-3 minute wait between actions
-- This is handled automatically for same-session actions
-
-### Rate Limits (Per Day)
-
-| Platform | Like | Comment | Follow | DM |
-|----------|------|---------|--------|-----|
-| Instagram | 100 | 30 | 50 | 50 |
-| LinkedIn | 100 | 30 | 15* | 40 |
-
-*Connection requests
-
-### Required Environment Variables
-
-```bash
-# Instagram
-INSTAGRAM_USERNAME=your_username
-INSTAGRAM_PASSWORD="your_password"
-
-# LinkedIn (supports MFA - approve in app when prompted)
-LINKEDIN_EMAIL=your_email
-LINKEDIN_PASSWORD="your_password"
-```
-
-### Session Files
-
-- Sessions stored in `./sessions/{platform}.json`
-- Browser data in `./browser-data/`
-- Debug screenshots in `./sessions/debug-*.png`
+- [Features](#-features)
+  - [Platform Support](#platform-support)
+  - [Automation Capabilities](#automation-capabilities)
+  - [Integration Options](#integration-options)
+- [Architecture](#-architecture)
+- [Workflow](#-workflow)
+  - [Human Simulation](#human-simulation)
+  - [Rate Limiting](#rate-limiting)
+- [Security](#-security)
+- [Installation](#-installation)
+  - [Prerequisites](#prerequisites)
+  - [Quick Start (Human)](#quick-start-human)
+  - [AI Agent Instructions](#-ai-agent-instructions)
+  - [Docker](#docker)
+- [Usage](#-usage)
+  - [CLI Commands](#cli-commands)
+  - [REST API Examples](#rest-api-examples)
+  - [Programmatic Usage](#programmatic-usage)
+- [API Reference](#-api-reference)
+- [Configuration](#-configuration)
+  - [Environment Variables](#environment-variables)
+  - [Rate Limits](#rate-limits)
+- [Disclaimer](#-disclaimer)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
-## Overview
+## ✨ Features
 
-ClawSocial is a robust, production-ready social media automation platform built with Playwright. It simulates human-like behavior to interact with Instagram, Twitter/X, and LinkedIn safely and efficiently.
+### Platform Support
 
-### Key Principles
+| Platform | Login | Like | Comment | Follow | DM | Connect | Search | Status |
+|----------|:-----:|:----:|:-------:|:------:|:--:|:-------:|:------:|--------|
+| Instagram | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | **Production Ready** |
+| LinkedIn | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **Production Ready** |
+| Twitter/X | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | Implemented |
+| Reddit | 🔜 | 🔜 | 🔜 | 🔜 | 🔜 | — | — | Planned |
 
-- **Human-like Behavior**: Random delays, natural typing speed, realistic interaction patterns
-- **Rate Limiting**: Built-in protection against platform restrictions
-- **Stealth Mode**: Anti-detection measures to avoid automated behavior flags
-- **Session Persistence**: Maintain login sessions across restarts
-- **Multi-Platform**: Unified API for Instagram, Twitter, and LinkedIn
+> **Status Key**: "Production Ready" = tested & verified. "Implemented" = code complete. "Planned" = on roadmap.
 
----
+### Automation Capabilities
 
-## Features
-
-### Platforms
-
-| Platform | Login | Like | Comment | Follow | DM | Status |
-|----------|-------|------|---------|--------|-----|--------|
-| Instagram | ✅ | ✅ | ✅ | ✅ | ✅ | **Tested & Working** |
-| LinkedIn | ✅ | ✅ | ✅ | ✅* | ✅ | **Tested & Working** |
-| Twitter/X | ✅ | ✅ | ✅ | ✅ | ✅ | Implemented |
-| Reddit | 🔜 | 🔜 | 🔜 | 🔜 | 🔜 | Planned |
-
-*Connection requests
-
-> 📋 **Status Key**: "Tested & Working" = verified in production. "Implemented" = code complete, needs testing. "Planned" = on roadmap.
-
-### Automation Features
-
-- **Human Simulation**: 
+- **🤖 Human-like Behavior**
   - Warm-up browsing (scrolls feed before actions)
   - Randomized delays (1.5-4s between actions)
-  - Natural typing (30-100ms per character)
+  - Natural typing speed (30-100ms per character)
   - Thinking pauses (2-5s before complex actions)
   - Action cooldown (2-3 min between multiple actions)
-- **Rate Limiting**: Configurable daily limits per action type
-- **Session Management**: Cookie storage, auto-restore sessions
-- **Stealth Mode**: Browser fingerprint protection, anti-bot detection
-- **Error Recovery**: Automatic retries with exponential backoff
-- **Logging**: Structured logging with Winston
 
-### Integration
+- **🛡️ Safety Features**
+  - Built-in rate limiting per platform
+  - Session persistence across restarts
+  - Stealth mode (anti-detection measures)
+  - Automatic error recovery with exponential backoff
 
-- **REST API**: Full HTTP API for programmatic control
-- **WebSocket**: Real-time bidirectional communication
-- **CLI**: Command-line interface for quick actions
-- **Webhooks**: Event notifications (coming soon)
+- **📊 Platform-Specific**
+  - **Instagram**: Follower scraping, post engagement, DMs
+  - **LinkedIn**: Connection requests (including 3rd degree via More dropdown), post engagement, search & engage
+  - **Twitter/X**: Tweet posting, engagement, DMs
+
+### Integration Options
+
+| Interface | Description |
+|-----------|-------------|
+| **CLI** | Command-line interface for quick actions |
+| **REST API** | Full HTTP API on port 3847 |
+| **WebSocket** | Real-time bidirectional communication on port 3848 |
+| **Programmatic** | TypeScript/JavaScript SDK |
 
 ---
 
-## Installation
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        ClawSocial                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐                     │
+│  │   CLI   │  │  REST   │  │   WS    │    Interfaces       │
+│  └────┬────┘  └────┬────┘  └────┬────┘                     │
+│       │            │            │                           │
+│       └────────────┼────────────┘                           │
+│                    ▼                                        │
+│  ┌─────────────────────────────────────┐                   │
+│  │          Command Router             │                   │
+│  └─────────────────┬───────────────────┘                   │
+│                    ▼                                        │
+│  ┌─────────────────────────────────────┐                   │
+│  │           Rate Limiter              │                   │
+│  └─────────────────┬───────────────────┘                   │
+│                    ▼                                        │
+│  ┌──────────┬──────────┬──────────┐                        │
+│  │Instagram │ LinkedIn │ Twitter  │   Platform Handlers    │
+│  └────┬─────┴────┬─────┴────┬─────┘                        │
+│       │          │          │                               │
+│       └──────────┼──────────┘                               │
+│                  ▼                                          │
+│  ┌─────────────────────────────────────┐                   │
+│  │         Browser Manager             │                   │
+│  │    (Playwright + Stealth Mode)      │                   │
+│  └─────────────────────────────────────┘                   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key Components:**
+- **Interfaces**: Multiple ways to interact (CLI, REST, WebSocket)
+- **Command Router**: Routes requests to appropriate handlers
+- **Rate Limiter**: Enforces daily limits per platform/action
+- **Platform Handlers**: Instagram, LinkedIn, Twitter-specific logic
+- **Browser Manager**: Playwright with stealth mode and session persistence
+
+---
+
+## 🔄 Workflow
+
+### Human Simulation
+
+ClawSocial automatically simulates human behavior for every action:
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Warm-up    │ ──▶ │  Navigate   │ ──▶ │   Think     │ ──▶ │   Action    │
+│  (3-5 scrolls)   │  to Target  │     │  (2-5s)     │     │  + Typing   │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+1. **Warm-up**: Scrolls feed 3-5 times with random pauses (mimics checking notifications)
+2. **Navigate**: Goes to target with natural page load timing
+3. **Think**: Pauses 2-5s (simulates reading/deciding)
+4. **Action**: Performs action with natural typing speed (30-100ms/char)
+
+### Rate Limiting
+
+Default daily limits to stay within platform guidelines:
+
+| Platform | Like | Comment | Follow | DM | Connect |
+|----------|:----:|:-------:|:------:|:--:|:-------:|
+| Instagram | 100 | 30 | 50 | 50 | — |
+| LinkedIn | 100 | 30 | 50 | 40 | 15 |
+| Twitter | 100 | 50 | 50 | 50 | — |
+
+---
+
+## 🔐 Security
+
+| Feature | Description |
+|---------|-------------|
+| **No Hardcoded Credentials** | All secrets via environment variables |
+| **Session Encryption** | Optional encryption for stored cookies |
+| **Local Binding** | Server binds to `127.0.0.1` by default |
+| **API Authentication** | Optional API key for remote access |
+| **Stealth Mode** | Browser fingerprint protection, anti-bot detection |
+| **Rate Limiting** | Prevents accidental platform bans |
+
+---
+
+## 📦 Installation
 
 ### Prerequisites
 
 - Node.js 18+
 - npm or pnpm
 
-### Quick Start
+### Quick Start (Human)
 
 ```bash
 # Clone the repository
@@ -172,8 +195,9 @@ npm install
 # Install Playwright browsers
 npx playwright install chromium
 
-# Copy environment file
+# Copy environment file and configure
 cp .env.example .env
+# Edit .env with your credentials
 
 # Build
 npm run build
@@ -181,6 +205,82 @@ npm run build
 # Start server
 npm start
 ```
+
+### ⚠️ Important Notice
+
+> **This software is for educational and experimental purposes only.**
+> 
+> Read **[AUTOMATION_RULES.md](./AUTOMATION_RULES.md)** before using.
+> 
+> | Platform | Status |
+> |----------|--------|
+> | Instagram | 🟡 Production - use responsibly |
+> | LinkedIn | 🟡 Production - use responsibly |
+> | Twitter/X | 🟡 Consider [`bird`](https://github.com/adolfousier/bird) CLI for cookies-based approach |
+
+### 🤖 AI Agent Instructions
+
+> **For AI agents (OpenClaw, Claude, etc.)** — Here's how to use ClawSocial:
+
+#### Quick Commands
+
+```bash
+# Login (headless - uses .env credentials)
+npm run cli -- session login <platform> --headless
+
+# Check session status
+npm run cli -- session status
+
+# Instagram
+npm run cli -- ig like <post-url>
+npm run cli -- ig comment <post-url> "Your comment"
+npm run cli -- ig dm <username> "Your message"
+npm run cli -- ig follow <username>
+npm run cli -- ig followers <username> -n 10    # Scrape followers
+npm run cli -- ig posts <username> -n 3         # Get recent posts
+
+# LinkedIn
+npm run cli -- linkedin like <post-url>
+npm run cli -- linkedin comment <post-url> "Your comment"
+npm run cli -- linkedin dm <profile-url> "Your message"
+npm run cli -- linkedin connect <profile-url>   # Works for 3rd degree too
+npm run cli -- linkedin search <query>          # Search posts/articles
+npm run cli -- linkedin engage --query=<query>  # Full engagement session
+
+# Twitter
+npm run cli -- twitter like <tweet-url>
+npm run cli -- twitter tweet "Your tweet"
+npm run cli -- twitter follow <username>
+```
+
+#### Required Environment Variables
+
+```bash
+# Instagram
+INSTAGRAM_USERNAME=your_username
+INSTAGRAM_PASSWORD="your_password"
+
+# LinkedIn (supports MFA - approve in app when prompted)
+LINKEDIN_EMAIL=your_email
+LINKEDIN_PASSWORD="your_password"
+
+# Twitter (optional - or use bird CLI with cookies)
+TWITTER_USERNAME=your_username
+TWITTER_PASSWORD="your_password"
+```
+
+#### Session Files
+
+| Path | Description |
+|------|-------------|
+| `./sessions/{platform}.json` | Stored session cookies |
+| `./browser-data/` | Browser profile data |
+| `./sessions/debug-*.png` | Debug screenshots |
+| `./db/` | State files (engaged profiles, etc.) |
+
+#### Multi-Action Sequences
+
+When performing multiple actions on the same profile (e.g., DM then comment), ClawSocial automatically applies a 2-3 minute cooldown between actions.
 
 ### Docker
 
@@ -201,46 +301,60 @@ docker run -d \
 
 ---
 
-## Usage
+## 🚀 Usage
 
-### CLI
+### CLI Commands
+
+#### Session Management
 
 ```bash
-# Start the server
-npm run cli -- serve
-
-# Login (headless - uses credentials from .env)
-npm run cli -- session login instagram --headless
-
-# Login (interactive - opens browser for manual login)
+# Interactive login (opens browser)
 npm run cli -- session login instagram
 
-# Check session status
+# Headless login (uses .env credentials)
+npm run cli -- session login linkedin --headless
+
+# Check all sessions
 npm run cli -- session status
-
-# Instagram actions
-npm run cli -- ig like https://instagram.com/p/ABC123
-npm run cli -- ig follow username
-npm run cli -- ig comment https://instagram.com/p/ABC123 "Great post!"
-npm run cli -- ig dm username "Hello from ClawSocial!"
-npm run cli -- ig followers username -n 10  # Scrape followers from profile
-npm run cli -- ig posts username -n 3       # Get recent posts from profile
-npm run cli -- ig profile username          # Get profile data
-
-# Twitter actions
-npm run cli -- twitter like https://twitter.com/user/status/123
-npm run cli -- twitter tweet "Hello world!"
-npm run cli -- twitter follow username
-
-# LinkedIn actions
-npm run cli -- linkedin connect https://linkedin.com/in/username
-npm run cli -- linkedin message https://linkedin.com/in/username "Hi there"
 
 # Logout
 npm run cli -- session logout instagram
 ```
 
-### REST API
+#### Instagram
+
+```bash
+npm run cli -- ig like https://instagram.com/p/ABC123
+npm run cli -- ig comment https://instagram.com/p/ABC123 "Great post!"
+npm run cli -- ig follow username
+npm run cli -- ig dm username "Hello!"
+npm run cli -- ig followers username -n 10
+npm run cli -- ig posts username -n 5
+npm run cli -- ig profile username
+```
+
+#### LinkedIn
+
+```bash
+npm run cli -- linkedin like https://linkedin.com/posts/xxx
+npm run cli -- linkedin comment https://linkedin.com/posts/xxx "Insightful!"
+npm run cli -- linkedin connect https://linkedin.com/in/username
+npm run cli -- linkedin dm https://linkedin.com/in/username "Hi there"
+npm run cli -- linkedin search "AI automation"
+npm run cli -- linkedin engage --query="OpenClaw"
+npm run cli -- linkedin profile username
+```
+
+#### Twitter
+
+```bash
+npm run cli -- twitter like https://twitter.com/user/status/123
+npm run cli -- twitter tweet "Hello world!"
+npm run cli -- twitter reply https://twitter.com/user/status/123 "Great point!"
+npm run cli -- twitter follow username
+```
+
+### REST API Examples
 
 ```bash
 # Like an Instagram post
@@ -249,18 +363,18 @@ curl -X POST http://localhost:3847/api/instagram/like \
   -H "X-API-Key: your-api-key" \
   -d '{"url": "https://instagram.com/p/ABC123"}'
 
-# Follow a Twitter user
-curl -X POST http://localhost:3847/api/twitter/follow \
+# Send LinkedIn connection
+curl -X POST http://localhost:3847/api/linkedin/connect \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-api-key" \
-  -d '{"username": "elonmusk"}'
+  -d '{"profileUrl": "https://linkedin.com/in/username"}'
 
 # Get rate limit status
 curl http://localhost:3847/api/status \
   -H "X-API-Key: your-api-key"
 ```
 
-### Programmatic
+### Programmatic Usage
 
 ```typescript
 import { ClawSocial } from 'clawsocial';
@@ -274,15 +388,15 @@ await claw.initialize();
 
 // Instagram
 const ig = claw.instagram;
-await ig.login(); // Interactive login if no session
+await ig.login();
 await ig.like('https://instagram.com/p/ABC123');
 await ig.follow('username');
 await ig.comment('https://instagram.com/p/ABC123', 'Nice!');
 
-// Twitter
-const twitter = claw.twitter;
-await twitter.like('https://twitter.com/user/status/123');
-await twitter.tweet('Hello from ClawSocial!');
+// LinkedIn
+const linkedin = claw.linkedin;
+await linkedin.login();
+await linkedin.connect('https://linkedin.com/in/username');
 
 // Cleanup
 await claw.shutdown();
@@ -290,11 +404,9 @@ await claw.shutdown();
 
 ---
 
-## API Reference
+## 📡 API Reference
 
-### REST Endpoints
-
-#### Instagram
+### Instagram Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -305,7 +417,17 @@ await claw.shutdown();
 | POST | `/api/instagram/dm` | Send a direct message |
 | GET | `/api/instagram/profile/:username` | Get profile data |
 
-#### Twitter
+### LinkedIn Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/linkedin/like` | Like a post |
+| POST | `/api/linkedin/comment` | Comment on a post |
+| POST | `/api/linkedin/connect` | Send connection request |
+| POST | `/api/linkedin/message` | Send a message |
+| GET | `/api/linkedin/profile/:username` | Get profile data |
+
+### Twitter Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -316,27 +438,18 @@ await claw.shutdown();
 | POST | `/api/twitter/follow` | Follow a user |
 | POST | `/api/twitter/dm` | Send a direct message |
 
-#### LinkedIn
+### System Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/linkedin/connect` | Send connection request |
-| POST | `/api/linkedin/message` | Send a message |
-| POST | `/api/linkedin/like` | Like a post |
-| GET | `/api/linkedin/profile/:username` | Get profile data |
-
-#### System
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/status` | Get system and rate limit status |
+| GET | `/api/status` | System and rate limit status |
 | GET | `/api/health` | Health check |
 | POST | `/api/session/login/:platform` | Initiate login |
 | POST | `/api/session/logout/:platform` | Logout |
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
 ### Environment Variables
 
@@ -345,95 +458,63 @@ await claw.shutdown();
 | `PORT` | 3847 | HTTP server port |
 | `WS_PORT` | 3848 | WebSocket server port |
 | `HOST` | 127.0.0.1 | Server bind address |
-| `LOG_LEVEL` | info | Logging level (debug, info, warn, error) |
-| `BROWSER_HEADLESS` | true | Run browser in headless mode |
+| `LOG_LEVEL` | info | Logging level |
+| `BROWSER_HEADLESS` | true | Run browser headless |
 | `BROWSER_DATA_DIR` | ./browser-data | Browser profile directory |
 | `SESSION_DIR` | ./sessions | Session storage directory |
 | `DELAY_MIN_MS` | 1500 | Minimum delay between actions |
 | `DELAY_MAX_MS` | 4000 | Maximum delay between actions |
-| `TYPING_SPEED_MIN_MS` | 30 | Minimum typing delay per character |
-| `TYPING_SPEED_MAX_MS` | 100 | Maximum typing delay per character |
-| `INSTAGRAM_USERNAME` | - | Instagram username (for headless login) |
-| `INSTAGRAM_PASSWORD` | - | Instagram password (for headless login) |
-| `TWITTER_USERNAME` | - | Twitter username (for headless login) |
-| `TWITTER_PASSWORD` | - | Twitter password (for headless login) |
-| `LINKEDIN_EMAIL` | - | LinkedIn email (for headless login) |
-| `LINKEDIN_PASSWORD` | - | LinkedIn password (for headless login) |
+| `TYPING_SPEED_MIN_MS` | 30 | Min typing delay per character |
+| `TYPING_SPEED_MAX_MS` | 100 | Max typing delay per character |
 
-> ⚠️ **Note**: For passwords with special characters, wrap in quotes: `INSTAGRAM_PASSWORD="my*pass(word"`
+#### Platform Credentials
+
+```bash
+# Instagram
+INSTAGRAM_USERNAME=your_username
+INSTAGRAM_PASSWORD="your_password"
+
+# LinkedIn
+LINKEDIN_EMAIL=your_email
+LINKEDIN_PASSWORD="your_password"
+
+# Twitter (optional)
+TWITTER_USERNAME=your_username
+TWITTER_PASSWORD="your_password"
+```
+
+> ⚠️ **Note**: For passwords with special characters, wrap in quotes: `PASSWORD="my*pass(word"`
 
 ### Rate Limits
 
-Default daily limits (configurable via environment):
+Configurable via environment or code. Defaults:
 
-| Platform | Action | Default Limit |
-|----------|--------|---------------|
-| Instagram | Like | 100/day |
-| Instagram | Comment | 30/day |
-| Instagram | Follow | 50/day |
-| Instagram | DM | 50/day |
-| Twitter | Like | 100/day |
-| Twitter | Tweet | 10/day |
-| Twitter | Follow | 50/day |
-| LinkedIn | Connect | 15/day |
-| LinkedIn | Message | 40/day |
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        ClawSocial                           │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────┐  ┌─────────┐  ┌─────────┐                     │
-│  │   CLI   │  │  REST   │  │   WS    │    Interfaces       │
-│  └────┬────┘  └────┬────┘  └────┬────┘                     │
-│       │            │            │                           │
-│  ┌────┴────────────┴────────────┴────┐                     │
-│  │           Command Router           │                     │
-│  └────────────────┬───────────────────┘                     │
-│                   │                                         │
-│  ┌────────────────┴───────────────────┐                     │
-│  │           Rate Limiter             │                     │
-│  └────────────────┬───────────────────┘                     │
-│                   │                                         │
-│  ┌────────┬───────┴───────┬────────┐                       │
-│  │Instagram│   Twitter    │LinkedIn│   Platform Handlers   │
-│  └────┬───┘└──────┬───────┘└───┬───┘                       │
-│       │           │            │                           │
-│  ┌────┴───────────┴────────────┴────┐                      │
-│  │         Browser Manager          │                      │
-│  │      (Playwright + Stealth)      │                      │
-│  └──────────────────────────────────┘                      │
-└─────────────────────────────────────────────────────────────┘
-```
+| Platform | Action | Default | Env Variable |
+|----------|--------|---------|--------------|
+| Instagram | Like | 100/day | `IG_RATE_LIKE` |
+| Instagram | Comment | 30/day | `IG_RATE_COMMENT` |
+| Instagram | Follow | 50/day | `IG_RATE_FOLLOW` |
+| Instagram | DM | 50/day | `IG_RATE_DM` |
+| LinkedIn | Like | 100/day | `LI_RATE_LIKE` |
+| LinkedIn | Comment | 30/day | `LI_RATE_COMMENT` |
+| LinkedIn | Connect | 15/day | `LI_RATE_CONNECT` |
+| LinkedIn | Message | 40/day | `LI_RATE_MESSAGE` |
 
 ---
 
-## Security
+## ⚖️ Disclaimer
 
-- **No credentials in code**: All secrets via environment variables
-- **Session encryption**: Optional encryption for stored cookies
-- **Local binding**: Server binds to localhost by default
-- **API authentication**: Optional API key for remote access
-- **Rate limiting**: Prevents accidental platform bans
+This software is provided for **educational and research purposes**. Users are responsible for:
 
----
-
-## Disclaimer
-
-This software is provided for educational and research purposes. Users are responsible for:
-
-1. Complying with the Terms of Service of each platform
-2. Respecting rate limits and usage policies
-3. Not using this software for spam, harassment, or illegal activities
+1. ✅ Complying with the Terms of Service of each platform
+2. ✅ Respecting rate limits and usage policies
+3. ❌ **Not** using this software for spam, harassment, or illegal activities
 
 The authors are not responsible for any misuse or violations of platform policies.
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting PRs.
 
@@ -445,7 +526,7 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 
 ---
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -454,5 +535,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <div align="center">
 
 **Built with ❤️ by [Adolfo Usier](https://github.com/adolfousier)**
+
+[⬆ Back to Top](#-clawsocial)
 
 </div>

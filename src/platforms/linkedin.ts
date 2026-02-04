@@ -486,35 +486,106 @@ export class LinkedInHandler extends BasePlatformHandler {
       await this.navigate(payload.profileUrl);
       await this.think();
 
-      // Check if already connected or pending
-      if (await this.elementExists(SELECTORS.messageButton)) {
-        log.info('Already connected');
-        return this.createResult('connect', payload.profileUrl, startTime, status);
+      // Check for Connect button FIRST (LinkedIn shows Message for 2nd degree too)
+      // Look for main profile Connect button (not sidebar suggestions)
+      const page = await this.getPage();
+      
+      // Find Connect buttons and check if any are for the main profile (must be visible)
+      const connectButtons = await page.locator('button:has-text("Connect")').all();
+      let mainConnectButton = null;
+      
+      for (const btn of connectButtons) {
+        try {
+          // Check if button is visible
+          const isVisible = await btn.isVisible();
+          if (!isVisible) continue;
+          
+          const ariaLabel = await btn.getAttribute('aria-label');
+          const classes = await btn.getAttribute('class');
+          
+          // Skip sticky header buttons
+          if (classes?.includes('sticky-header')) continue;
+          
+          // Main profile Connect doesn't have "Invite X to connect" - sidebar suggestions do
+          if (!ariaLabel || !ariaLabel.toLowerCase().includes('invite')) {
+            mainConnectButton = btn;
+            break;
+          }
+        } catch {
+          // Skip problematic buttons
+        }
       }
-
-      if (await this.elementExists(SELECTORS.pendingButton)) {
-        log.info('Connection request already pending');
-        return this.createResult('connect', payload.profileUrl, startTime, status);
+      
+      // Also check for Follow button on main profile (must be visible, not sticky header)
+      const followButtons = await page.locator('button:has-text("Follow"):not(:has-text("Following"))').all();
+      let mainFollowButton = null;
+      
+      for (const btn of followButtons) {
+        try {
+          // Check if button is visible
+          const isVisible = await btn.isVisible();
+          if (!isVisible) continue;
+          
+          const ariaLabel = await btn.getAttribute('aria-label');
+          const classes = await btn.getAttribute('class');
+          
+          // Skip sticky header buttons
+          if (classes?.includes('sticky-header')) continue;
+          
+          // Main profile Follow usually has the person's name
+          if (ariaLabel && ariaLabel.toLowerCase().includes('follow') && !ariaLabel.toLowerCase().includes('unfollow')) {
+            mainFollowButton = btn;
+            break;
+          }
+        } catch {
+          // Skip problematic buttons
+        }
       }
+      
+      const hasMainConnectButton = mainConnectButton !== null;
+      const hasMainFollowButton = mainFollowButton !== null;
+      
+      log.info('Button detection', { hasMainConnectButton, hasMainFollowButton });
 
-      // Check if already following
-      if (await this.elementExists(SELECTORS.followingButton)) {
-        log.info('Already following this profile');
-        return this.createResult('connect', payload.profileUrl, startTime, status);
+      // If Connect button exists, person is NOT connected - proceed to connect
+      if (hasMainConnectButton) {
+        log.info('Found main profile Connect button - not connected yet');
+      } else {
+        // No Connect button - check if already connected or pending
+        if (await this.elementExists(SELECTORS.pendingButton)) {
+          log.info('Connection request already pending');
+          return this.createResult('connect', payload.profileUrl, startTime, status);
+        }
+        
+        // Check if already following
+        if (await this.elementExists(SELECTORS.followingButton)) {
+          log.info('Already following this profile');
+          return this.createResult('connect', payload.profileUrl, startTime, status);
+        }
+        
+        // No Connect, no Pending, no Following - check Message (truly connected)
+        if (await this.elementExists(SELECTORS.messageButton)) {
+          // Double check no Connect button with different selector
+          const anyConnect = await page.locator('button:has-text("Connect")').count();
+          if (anyConnect === 0 || !hasMainFollowButton) {
+            log.info('Already connected (no Connect button, has Message)');
+            return this.createResult('connect', payload.profileUrl, startTime, status);
+          }
+        }
       }
 
       // Try Connect button first
-      const hasConnectButton = await this.elementExists(SELECTORS.connectButton);
-      const hasFollowButton = await this.elementExists(SELECTORS.followButton);
+      const hasConnectButton = hasMainConnectButton;
+      const hasFollowButton = hasMainFollowButton;
 
       if (!hasConnectButton && !hasFollowButton) {
         return this.createErrorResult('connect', payload.profileUrl, 'Neither Connect nor Follow button found', startTime, status);
       }
 
-      if (hasConnectButton) {
-        // Standard connect flow
+      if (hasConnectButton && mainConnectButton) {
+        // Standard connect flow - click the actual button we found
         log.info('Found Connect button, sending connection request');
-        await this.clickHuman(SELECTORS.connectButton);
+        await mainConnectButton.click();
         await this.pause();
 
         // Add note if provided
@@ -523,7 +594,6 @@ export class LinkedInHandler extends BasePlatformHandler {
           await this.pause();
 
           if (await this.waitForElement(SELECTORS.noteInput, 5000)) {
-            const page = await this.getPage();
             await page.fill(SELECTORS.noteInput, payload.note);
             await this.pause();
           }
@@ -539,10 +609,10 @@ export class LinkedInHandler extends BasePlatformHandler {
         
         log.info('Successfully sent LinkedIn connection request');
         return this.createResult('connect', payload.profileUrl, startTime, status);
-      } else if (hasFollowButton) {
-        // Fallback to Follow for profiles with Follow-first mode
+      } else if (hasFollowButton && mainFollowButton) {
+        // Fallback to Follow for profiles with Follow-first mode - click the actual button
         log.info('No Connect button, falling back to Follow');
-        await this.clickHuman(SELECTORS.followButton);
+        await mainFollowButton.click();
         await this.delay();
         await this.recordAction('follow');
         

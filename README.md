@@ -52,7 +52,7 @@
 |----------|:-----:|:----:|:-------:|:------:|:--:|:-------:|:------:|--------|
 | Instagram | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | **Production Ready** |
 | LinkedIn | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **Production Ready** |
-| Twitter/X | ✅ | ✅ | ✅ | ✅ | ❌ | — | — | **Production Ready** |
+| Twitter/X | ✅ | ✅ | ✅ | ✅ | ❌ | — | ✅ | **Production Ready** |
 | Reddit | 🔜 | 🔜 | 🔜 | 🔜 | 🔜 | — | — | Planned |
 
 > **Status Key**: "Production Ready" = tested & verified. "Implemented" = code complete. "Planned" = on roadmap.

@@ -24,7 +24,6 @@
 - [Workflow](#-workflow)
   - [Human Simulation](#human-simulation)
   - [Automation Best Practices](#automation-best-practices)
-  - [Rate Limiting](#rate-limiting)
 - [Security](#-security)
 - [Installation](#-installation)
   - [Prerequisites](#prerequisites)
@@ -178,16 +177,6 @@ Follow this research-first workflow to avoid rate limits and bans:
 | **Twitter/X** | ✅ Via bird CLI | Use `bird search` for research. Less restrictive but still pace yourself. |
 
 > ⚠️ **Golden Rule:** Never scrape and engage in the same session. Research in one job, engage in separate jobs spread over hours.
-
-### Rate Limiting
-
-Default daily limits to stay within platform guidelines:
-
-| Platform | Like | Comment | Follow | DM | Connect |
-|----------|:----:|:-------:|:------:|:--:|:-------:|
-| Instagram | 100 | 30 | 50 | 50 | — |
-| LinkedIn | 100 | 30 | 50 | 40 | 15 |
-| Twitter | 100 | 50 | 50 | — | — |
 
 ---
 
@@ -384,6 +373,15 @@ npm run cli -- twitter reply https://twitter.com/user/status/123 "Great point!"
 npm run cli -- twitter follow username
 ```
 
+#### Notifications
+
+```bash
+npm run cli -- notify status                    # Check notification config
+npm run cli -- notify test                      # Send test notification
+npm run cli -- notify test telegram             # Test specific channel
+npm run cli -- notify send "Your message"       # Send custom message
+```
+
 ### REST API Examples
 
 ```bash
@@ -578,21 +576,6 @@ NOTIFY_ENABLED=true
 NOTIFY_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
 NOTIFY_TELEGRAM_CHAT_ID=7711740248
 NOTIFY_BRAND_FOOTER="*ClawSocial LinkedIn Automation*"
-```
-
-#### Notification CLI Commands
-
-```bash
-# Check notification status
-clawsocial notify status
-
-# Send test notification
-clawsocial notify test
-clawsocial notify test telegram
-
-# Send custom message
-clawsocial notify send "Hello from ClawSocial!"
-clawsocial notify send "Testing" --channel telegram
 ```
 
 ---

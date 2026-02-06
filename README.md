@@ -52,7 +52,7 @@
 |----------|:-----:|:----:|:-------:|:------:|:--:|:-------:|:------:|--------|
 | Instagram | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | **Production Ready** |
 | LinkedIn | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **Production Ready** |
-| Twitter/X | ✅ | ✅ | ✅ | ✅ | ✅ | — | — | Implemented |
+| Twitter/X | ✅ | ✅ | ✅ | ✅ | ❌ | — | — | **Production Ready** |
 | Reddit | 🔜 | 🔜 | 🔜 | 🔜 | 🔜 | — | — | Planned |
 
 > **Status Key**: "Production Ready" = tested & verified. "Implemented" = code complete. "Planned" = on roadmap.
@@ -75,7 +75,7 @@
 - **📊 Platform-Specific**
   - **Instagram**: Follower scraping, post engagement, DMs
   - **LinkedIn**: Connection requests (including 3rd degree via More dropdown), post engagement, search & engage
-  - **Twitter/X**: Tweet posting, engagement, DMs
+  - **Twitter/X**: Tweet posting, likes, replies, follows
 
 ### Integration Options
 
@@ -159,7 +159,7 @@ Default daily limits to stay within platform guidelines:
 |----------|:----:|:-------:|:------:|:--:|:-------:|
 | Instagram | 100 | 30 | 50 | 50 | — |
 | LinkedIn | 100 | 30 | 50 | 40 | 15 |
-| Twitter | 100 | 50 | 50 | 50 | — |
+| Twitter | 100 | 50 | 50 | — | — |
 
 ---
 
@@ -438,7 +438,6 @@ await claw.shutdown();
 | POST | `/api/twitter/reply` | Reply to a tweet |
 | POST | `/api/twitter/retweet` | Retweet |
 | POST | `/api/twitter/follow` | Follow a user |
-| POST | `/api/twitter/dm` | Send a direct message |
 
 ### System Endpoints
 

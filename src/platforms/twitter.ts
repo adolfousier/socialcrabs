@@ -228,27 +228,90 @@ export class TwitterHandler extends BasePlatformHandler {
       log.info('Liking tweet', { url: payload.url });
 
       await this.navigate(payload.url);
+      
+      const page = await this.getPage();
+      
+      // Wait for page to load properly
+      await page.waitForTimeout(3000);
+      
+      // Check if redirected to login
+      const currentUrl = page.url();
+      if (currentUrl.includes('/login') || currentUrl.includes('/i/flow/login')) {
+        log.error('Redirected to login - session may be invalid');
+        await page.screenshot({ path: './sessions/debug-x-login-redirect.png' });
+        return this.createErrorResult('like', payload.url, 'Session expired - redirected to login', startTime, status);
+      }
+      
+      // Handle cookie consent banner
+      const cookieAccept = page.locator('button:has-text("Accept all cookies"), div[role="button"]:has-text("Accept all")');
+      if (await cookieAccept.isVisible().catch(() => false)) {
+        log.info('Dismissing cookie banner');
+        await cookieAccept.first().click();
+        await page.waitForTimeout(1000);
+      }
+      
       await this.think();
 
-      // Check if already liked
-      if (await this.elementExists(SELECTORS.unlikeButton)) {
-        log.info('Tweet already liked');
-        return this.createResult('like', payload.url, startTime, status);
+      // Check if already liked - look for filled heart (unlike button)
+      // X uses data-testid="unlike" for already-liked state
+      // Try multiple selectors for the main tweet
+      const unlikeSelectors = [
+        'div[data-testid="unlike"]',
+        'article div[data-testid="unlike"]',
+        '[data-testid="unlike"]'
+      ];
+      
+      for (const sel of unlikeSelectors) {
+        const alreadyLiked = await page.locator(sel).first().isVisible().catch(() => false);
+        if (alreadyLiked) {
+          log.info('Tweet already liked');
+          return this.createResult('like', payload.url, startTime, status);
+        }
       }
 
-      if (!(await this.elementExists(SELECTORS.likeButton))) {
+      // Wait a bit more for like button - try multiple selectors
+      const likeSelectors = [
+        'div[data-testid="like"]',
+        'article div[data-testid="like"]',
+        '[data-testid="like"]'
+      ];
+      
+      let likeButton = null;
+      for (const sel of likeSelectors) {
+        const btn = page.locator(sel).first();
+        if (await btn.isVisible().catch(() => false)) {
+          likeButton = btn;
+          break;
+        }
+      }
+      
+      if (!likeButton) {
+        await page.screenshot({ path: './sessions/debug-x-like-not-found.png' });
+        log.error('Like button not found - screenshot saved');
         return this.createErrorResult('like', payload.url, 'Like button not found', startTime, status);
       }
 
-      await this.clickHuman(SELECTORS.likeButton);
-      await this.pause();
+      await likeButton.click();
+      await page.waitForTimeout(1500);
 
-      if (await this.elementExists(SELECTORS.unlikeButton)) {
+      // Verify like worked - check for unlike button
+      let likeSuccess = false;
+      for (const sel of unlikeSelectors) {
+        const unlikeBtn = await page.locator(sel).first().isVisible().catch(() => false);
+        if (unlikeBtn) {
+          likeSuccess = true;
+          break;
+        }
+      }
+      
+      if (likeSuccess) {
         await this.recordAction('like');
         log.info('Successfully liked tweet');
         return this.createResult('like', payload.url, startTime, status);
       }
 
+      await page.screenshot({ path: './sessions/debug-x-like-verify-failed.png' });
+      log.error('Like verification failed - screenshot saved');
       return this.createErrorResult('like', payload.url, 'Like action failed', startTime, status);
     } catch (error) {
       log.error('Error liking tweet', { error: String(error) });
@@ -325,27 +388,80 @@ export class TwitterHandler extends BasePlatformHandler {
 
       const profileUrl = `${this.baseUrl}/${payload.username}`;
       await this.navigate(profileUrl);
+      
+      const page = await this.getPage();
+      await page.waitForTimeout(3000);
+      
+      // Handle cookie consent banner
+      const cookieAccept = page.locator('button:has-text("Accept all cookies"), div[role="button"]:has-text("Accept all")');
+      if (await cookieAccept.isVisible().catch(() => false)) {
+        log.info('Dismissing cookie banner');
+        await cookieAccept.first().click();
+        await page.waitForTimeout(1000);
+      }
+      
       await this.think();
 
-      // Check if already following
-      if (await this.elementExists(SELECTORS.unfollowButton)) {
-        log.info('Already following user');
-        return this.createResult('follow', payload.username, startTime, status);
+      // Check if already following - multiple selectors
+      const followingSelectors = [
+        'div[data-testid="placementTracking"] div[role="button"][data-testid*="unfollow"]',
+        'div[role="button"][aria-label*="Following"]',
+        'div[data-testid="userActions"] div[role="button"]:has-text("Following")',
+        '[data-testid*="unfollow"]'
+      ];
+      
+      for (const sel of followingSelectors) {
+        const isFollowing = await page.locator(sel).first().isVisible().catch(() => false);
+        if (isFollowing) {
+          log.info('Already following user');
+          return this.createResult('follow', payload.username, startTime, status);
+        }
       }
 
-      if (!(await this.elementExists(SELECTORS.followButton))) {
+      // Find follow button - multiple selectors
+      const followSelectors = [
+        'div[data-testid="placementTracking"] div[role="button"]:has-text("Follow")',
+        'div[role="button"][aria-label*="Follow @"]',
+        'div[data-testid="userActions"] div[role="button"]:has-text("Follow")',
+        '[data-testid*="follow"]:not([data-testid*="unfollow"])'
+      ];
+      
+      let followButton = null;
+      for (const sel of followSelectors) {
+        const btn = page.locator(sel).first();
+        if (await btn.isVisible().catch(() => false)) {
+          followButton = btn;
+          log.info('Found follow button', { selector: sel });
+          break;
+        }
+      }
+      
+      if (!followButton) {
+        await page.screenshot({ path: './sessions/debug-x-follow-not-found.png' });
+        log.error('Follow button not found - screenshot saved');
         return this.createErrorResult('follow', payload.username, 'Follow button not found', startTime, status);
       }
 
-      await this.clickHuman(SELECTORS.followButton);
-      await this.delay();
+      await followButton.click();
+      await page.waitForTimeout(1500);
 
-      if (await this.elementExists(SELECTORS.unfollowButton)) {
+      // Verify follow worked
+      let followSuccess = false;
+      for (const sel of followingSelectors) {
+        const isNowFollowing = await page.locator(sel).first().isVisible().catch(() => false);
+        if (isNowFollowing) {
+          followSuccess = true;
+          break;
+        }
+      }
+      
+      if (followSuccess) {
         await this.recordAction('follow');
         log.info('Successfully followed Twitter user');
         return this.createResult('follow', payload.username, startTime, status);
       }
 
+      await page.screenshot({ path: './sessions/debug-x-follow-verify-failed.png' });
       return this.createErrorResult('follow', payload.username, 'Follow action failed', startTime, status);
     } catch (error) {
       log.error('Error following Twitter user', { error: String(error) });
@@ -417,12 +533,25 @@ export class TwitterHandler extends BasePlatformHandler {
       await this.think();
 
       // Click DM button
+      const page = await this.getPage();
       if (!(await this.waitForElement(SELECTORS.dmButton, 10000))) {
-        return this.createErrorResult('dm', payload.username, 'DM button not found', startTime, status);
+        // Debug: save screenshot to see what's on the page
+        await page.screenshot({ path: `sessions/debug-dm-${payload.username}.png` });
+        log.warn('DM button not found, saved debug screenshot', { username: payload.username });
+        
+        // Try alternative: click the "Message" link in the actions menu
+        const messageLink = await page.$('a[href*="/messages/compose"]');
+        if (messageLink) {
+          log.info('Found message link, clicking...');
+          await messageLink.click();
+          await this.delay();
+        } else {
+          return this.createErrorResult('dm', payload.username, 'DM button not found', startTime, status);
+        }
+      } else {
+        await this.clickHuman(SELECTORS.dmButton);
+        await this.delay();
       }
-
-      await this.clickHuman(SELECTORS.dmButton);
-      await this.delay();
 
       // Wait for DM input
       if (!(await this.waitForElement(SELECTORS.dmInput, 10000))) {
@@ -431,8 +560,6 @@ export class TwitterHandler extends BasePlatformHandler {
 
       // Type message
       await this.clickHuman(SELECTORS.dmInput);
-      
-      const page = await this.getPage();
       await page.keyboard.type(payload.message, { delay: 50 });
       await this.pause();
 

@@ -367,8 +367,19 @@ twitter
 twitter
   .command('follow <username>')
   .description('Follow a Twitter user')
-  .action(async (username: string) => {
+  .action(async (usernameOrUrl: string) => {
     try {
+      // Extract username from URL if needed (handles https://x.com/username or https://twitter.com/username)
+      let username = usernameOrUrl;
+      if (usernameOrUrl.includes('x.com/') || usernameOrUrl.includes('twitter.com/')) {
+        const match = usernameOrUrl.match(/(?:x\.com|twitter\.com)\/(@?[\w]+)/);
+        if (match) {
+          username = match[1].replace('@', '');
+        }
+      }
+      // Remove @ prefix if present
+      username = username.replace(/^@/, '');
+      
       const claw = new ClawSocial({ browser: { headless: true } });
       await claw.initialize();
 
@@ -410,28 +421,7 @@ twitter
     }
   });
 
-twitter
-  .command('dm <username> <message>')
-  .description('Send a DM on Twitter')
-  .action(async (username: string, message: string) => {
-    try {
-      const claw = new ClawSocial({ browser: { headless: true } });
-      await claw.initialize();
-
-      const result = await claw.twitter.dm({ username, message });
-
-      if (result.success) {
-        console.log(`✅ Sent DM to: @${username}`);
-      } else {
-        console.log(`❌ Failed to send DM: ${result.error}`);
-      }
-
-      await claw.shutdown();
-    } catch (error) {
-      console.error('Error:', error);
-      process.exit(1);
-    }
-  });
+// X DM removed - encrypted DMs require passcode that can't be automated
 
 // ============================================================================
 // LinkedIn commands

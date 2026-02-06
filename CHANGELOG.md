@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.34] - 2026-02-06
+
+### Removed
+- **X/Twitter DM support**: Removed due to X's encrypted DM passcode requirement that cannot be automated
+
+### Fixed
+- **X Follow URL handling**: `x follow` now accepts both usernames and full URLs (e.g., `x follow vutruso` or `x follow https://x.com/vutruso`)
+
+### Changed
+- Twitter/X status updated to "Production Ready" for likes, replies, and follows
+
 ## [0.0.33] - 2026-02-04
 
 ### Fixed

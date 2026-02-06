@@ -246,7 +246,7 @@ npm start
 > |----------|--------|
 > | Instagram | 🟡 Production - use responsibly |
 > | LinkedIn | 🟡 Production - use responsibly |
-> | Twitter/X | 🟡 Consider [`bird`](https://github.com/adolfousier/bird) CLI for cookies-based approach |
+> | Twitter/X | 🟡 Production - use responsibly (likes, follows, replies via Playwright; search/post via [`bird`](https://github.com/adolfousier/bird) CLI) |
 
 ### 🤖 AI Agent Instructions
 

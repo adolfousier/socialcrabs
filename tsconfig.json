@@ -21,5 +21,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "src/scripts/debug-*.ts", "src/scripts/linkedin-debug.ts", "src/scripts/linkedin-scrape-search.ts", "src/scripts/engage.ts", "src/scripts/ig-engage.ts"]
 }

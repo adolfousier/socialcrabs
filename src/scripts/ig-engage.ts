@@ -6,7 +6,7 @@
  * Uses human-like delays between actions to avoid detection.
  */
 
-import { ClawSocial } from '../src/index.js';
+import { ClawSocial } from '../index.js';
 import * as fs from 'fs';
 import * as path from 'path';
 

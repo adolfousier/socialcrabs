@@ -141,13 +141,14 @@ function formatXLike(success: boolean, target: string, d: NotificationDetails): 
   const status = success ? '✅' : '❌';
   const lines: string[] = [];
   
-  lines.push(`🐦 **X LIKE** ${status}`);
+  lines.push(`🐦 **X ENGAGEMENT** ${status}`);
   lines.push('');
   lines.push(`**Tweet:** ${d.tweet || d.postUrl || target}`);
   if (d.author) lines.push(`**Author:** @${d.author.replace('@', '')}`);
   if (d.preview) lines.push(`**Preview:** "${d.preview.substring(0, 100)}"`);
   lines.push('');
-  lines.push('**Action:** ❤️ Liked');
+  lines.push('**Actions:**');
+  lines.push('• ❤️ Liked: ✅');
   lines.push('');
   addFooterFields(lines, d);
   lines.push('');

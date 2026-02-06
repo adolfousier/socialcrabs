@@ -250,6 +250,24 @@ export class TwitterHandler extends BasePlatformHandler {
         await page.waitForTimeout(1000);
       }
       
+      // Extract tweet details for notification
+      let author = '';
+      let preview = '';
+      try {
+        // Get author from tweet article
+        const authorEl = page.locator('article div[data-testid="User-Name"] a[role="link"]').first();
+        const authorHref = await authorEl.getAttribute('href').catch(() => null);
+        if (authorHref) {
+          author = authorHref.replace('/', '').split('/')[0];
+        }
+        // Get tweet text
+        const tweetTextEl = page.locator('article div[data-testid="tweetText"]').first();
+        preview = await tweetTextEl.textContent().catch(() => '') || '';
+        preview = preview.substring(0, 100);
+      } catch {
+        log.debug('Could not extract tweet details');
+      }
+      
       await this.think();
 
       // Check if already liked - look for filled heart (unlike button)
@@ -267,6 +285,8 @@ export class TwitterHandler extends BasePlatformHandler {
           log.info('Tweet already liked');
           return this.createResult('like', payload.url, startTime, status, {
             postUrl: payload.url,
+            author,
+            preview,
             actions: ['❤️ Already Liked'],
           });
         }
@@ -312,6 +332,8 @@ export class TwitterHandler extends BasePlatformHandler {
         log.info('Successfully liked tweet');
         return this.createResult('like', payload.url, startTime, status, {
           postUrl: payload.url,
+          author,
+          preview,
           actions: ['❤️ Liked'],
         });
       }

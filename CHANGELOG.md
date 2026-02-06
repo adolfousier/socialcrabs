@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.38] - 2026-02-06
+
+### Removed
+- **Deleted hardcoded comment scripts**: `ig-engage.ts` and `engage.ts`
+  - These used hardcoded templates like "This is fire! 🔥" — obvious bot behavior
+  - Agent-driven approach is now the only way: read content → generate contextual comment
+
+### Changed
+- **Agent-driven comment system**: All engagement is now fully dynamic
+  - Agent reads the actual post/article content
+  - Agent reads user's `VOICE.md` style guide
+  - Agent generates unique, contextual comments
+  - Comments logged to prevent repetition
+- **Updated CRONJOB_TEMPLATE.md**: Complete rewrite for agent-driven workflow
+- **Updated NOTIFICATION_TEMPLATES.md**: Added VOICE.md documentation and comment quality examples
+- **Updated README.md**: Added "Agent-Driven Comments" section in best practices
+
+### Documentation
+- **Anti-patterns section**: Documents what NOT to do (hardcoded templates, generic AI phrases)
+- **VOICE.md examples**: Shows how to structure a style guide
+- **Comment storage**: How to log comments to avoid repetition
+
 ## [0.0.37] - 2026-02-06
 
 ### Fixed

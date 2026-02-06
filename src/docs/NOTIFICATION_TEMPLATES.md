@@ -4,6 +4,40 @@
 
 ---
 
+## Agent-Driven Comment System
+
+ClawSocial uses an **agent-driven approach** for comments:
+
+1. **Agent reads the content** (tweet, article, post)
+2. **Agent reads VOICE.md** for the user's style guide
+3. **Agent generates a unique, contextual comment**
+4. **Comment is logged** to prevent repetition
+
+### VOICE.md Example
+```markdown
+# VOICE.md — Comment Style Guide
+
+## Core Rules
+- **8th grade reading level** — simple words, short sentences
+- **Max 2 sentences** — most comments should be 1 sentence
+- **10-25 words** — if it's longer, cut it
+- **Ask questions** — engage, don't lecture
+
+## ✅ DO — Real Examples
+"15x performance improvement is wild. What's your content strategy?"
+"Spot on analogy 💯"
+"That's exactly it."
+"Smart move. Context switching between AIs is painful."
+
+## ❌ DON'T — AI Patterns to Avoid
+"Fascinating approach!"
+"Excellent analysis!"
+"Love this systematic approach!"
+"The intersection of X and Y is where things get really interesting"
+```
+
+---
+
 ## 🐦 X ENGAGEMENT REPORT
 
 ```
@@ -11,23 +45,23 @@
 
 **Tweet:** [full URL]
 **Author:** @[username]
-**Preview:** "[first 100 chars of original tweet]"
+**Preview:** "[first 80 chars of original tweet]"
 
 **Actions:**
 • ❤️ Liked: ✅
-• 💬 Replied: "[your reply text]"
+• 💬 Replied: "[your contextual reply]"
 
 **Language:** [EN/PT/ES/etc]
-**Behaviors:** Warm-up ✅, Profile check [✅/❌]
+**Behaviors:** Home feed viewed, search performed
+**Time:** [YYYY-MM-DD HH:MM:SS UTC]
 
-*ClawSocial X/Twitter Automation*
+_ClawSocial X/Twitter Automation_
 ```
 
 ### Fields Required:
-- `tweet` — Full tweet URL
 - `author` — Username without @
-- `preview` — First 100 chars of the original tweet
-- `reply` — Your reply text
+- `preview` — First 80 chars of the original tweet
+- `reply` — Your contextual reply text (NOT a template)
 - `language` — Detected language code
 - `behaviors` — What human-like behaviors were done
 
@@ -43,8 +77,9 @@
 **Followers:** [count formatted: 1.5K, 12.3K, etc]
 
 **Queue:** [remaining] accounts left
+**Time:** [YYYY-MM-DD HH:MM:SS UTC]
 
-*ClawSocial X/Twitter Automation*
+_ClawSocial X/Twitter Automation_
 ```
 
 ### Fields Required:
@@ -60,24 +95,26 @@
 ```
 🔗 **LINKEDIN ENGAGEMENT** ✅
 
-**Article:** "[Title]" by [Author]
+**Article:** "[Title]"
+**Author:** [Author name]
 **URL:** [full article URL]
 
 **Actions:**
 • ❤️ Liked: ✅
-• 💬 Commented: "[your comment text]"
+• 💬 Commented: "[your contextual comment]"
 
-**Session:** [Morning/Afternoon] batch ([X]/[total])
+**Behaviors:** Article read, liked
+**Time:** [YYYY-MM-DD HH:MM:SS UTC]
 
-*ClawSocial LinkedIn Automation*
+_ClawSocial LinkedIn Automation_
 ```
 
 ### Fields Required:
-- `articleTitle` — Title of the article
-- `articleAuthor` — Author name
+- `title` — Title of the article
+- `author` — Author name (if known)
 - `url` — Full article URL
-- `comment` — Your comment text
-- `sessionInfo` — e.g. "Morning batch (2/4)"
+- `comment` — Your contextual comment (NOT a template)
+- `behaviors` — What was done
 
 ---
 
@@ -86,22 +123,21 @@
 ```
 🔗 **LINKEDIN CONNECTION** ✅
 
-**Profile:** [username]
+**Profile:** [username/name]
 **URL:** [full profile URL]
 **Degree:** [2nd/3rd]
 **Method:** [Direct/More dropdown]
 
-**Note:** "[connection note if any]"
+**Time:** [YYYY-MM-DD HH:MM:SS UTC]
 
-*ClawSocial LinkedIn Automation*
+_ClawSocial LinkedIn Automation_
 ```
 
 ### Fields Required:
 - `username` — Profile username/name
-- `url` — Full profile URL
+- `profileUrl` — Full profile URL
 - `degree` — Connection degree
 - `method` — How the connect was done
-- `note` — Connection note (optional)
 
 ---
 
@@ -112,24 +148,27 @@
 
 **Target:** @[username]
 **Post:** [full post URL or "N/A"]
-**Action:** [Liked + Commented] or [Followed (no posts)]
 
-**Comment:** "[your comment text]" (if applicable)
+**Actions:**
+• ❤️ Liked: ✅
+• 💬 Commented: "[your contextual comment]"
 
-*ClawSocial Instagram Automation*
+**Behaviors:** Profile viewed, post liked
+**Time:** [YYYY-MM-DD HH:MM:SS UTC]
+
+_ClawSocial Instagram Automation_
 ```
 
 ### Fields Required:
-- `username` — Target username
+- `author` — Target username with @
 - `postUrl` — Post URL or "N/A"
-- `action` — What was done
-- `comment` — Comment text if commented
+- `comment` — Your contextual comment (NOT a template)
+- `behaviors` — What was done
 
 ---
 
 ## ❌ ERROR REPORTS
 
-Add after the header:
 ```
 ❌ **[PLATFORM] [ACTION]** ❌
 
@@ -137,8 +176,41 @@ Add after the header:
 **Error:** [error message]
 **Attempted:** [what was tried]
 
-*ClawSocial [Platform] Automation*
+**Time:** [YYYY-MM-DD HH:MM:SS UTC]
+
+_ClawSocial [Platform] Automation_
 ```
+
+---
+
+## Comment Quality Examples
+
+### ❌ BAD (Generic Templates)
+```
+"This is fire! 🔥"
+"Love this! ❤️"
+"Great insights here!"
+"Amazing content! 🙌"
+"Thanks for sharing!"
+```
+
+### ✅ GOOD (Contextual, Dynamic)
+```
+"That 15x improvement is wild. What's your caching strategy?"
+"Spot on. The config drift problem is real."
+"Smart approach. Did you hit any rate limits?"
+"Nice setup. How long did migration take?"
+"Interessante! Qual framework você usou?" (Portuguese)
+```
+
+### Key Differences:
+| Bad | Good |
+|-----|------|
+| Generic praise | References specific content |
+| Any post fits | Only fits THIS post |
+| Template-able | Unique each time |
+| No questions | Often asks follow-up |
+| Always positive | Sometimes skeptical |
 
 ---
 
@@ -147,10 +219,11 @@ Add after the header:
 1. **Headers:** Use `**bold**` for Telegram markdown
 2. **Bullets:** Use `•` not `-`
 3. **Checkmarks:** Use ✅ and ❌
-4. **Footer:** Always italicized `*ClawSocial [Platform] Automation*`
+4. **Footer:** Always italicized `_ClawSocial [Platform] Automation_`
 5. **No extra blank lines** between fields
 6. **URLs:** Full URLs, not shortened
-7. **Quotes:** Wrap text in `"quotes"`
+7. **Quotes:** Wrap comment text in `"quotes"`
+8. **Time:** Always include UTC timestamp
 
 ---
 
@@ -158,7 +231,28 @@ Add after the header:
 
 Pass context as JSON:
 ```bash
-npm run cli -- x like <url> --context='{"author":"elonmusk","preview":"Tweet preview text...","language":"EN","behaviors":"Warm-up ✅, Profile check ✅"}'
+npm run cli -- notify report twitter engagement <url> --context='{"author":"username","preview":"First 80 chars...","reply":"Your contextual reply","language":"EN","behaviors":"Home feed viewed"}'
 ```
 
 ClawSocial formats automatically using these templates.
+
+---
+
+## Storage: Comment Logs
+
+To avoid repetition, log all comments:
+
+```bash
+# Append to comment log
+echo "$(date +%Y-%m-%d\ %H:%M) | @username | Your comment text" >> ~/clawd/x-comments.txt
+```
+
+**Format:**
+```
+# ~/clawd/x-comments.txt
+2026-02-06 15:30 | @user1 | That's wild. What stack?
+2026-02-06 15:45 | @user2 | Spot on 💯
+2026-02-06 16:03 | @user3 | Smart move. Did it work?
+```
+
+Before commenting, read the log to avoid similar phrases.

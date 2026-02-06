@@ -178,6 +178,42 @@ Follow this research-first workflow to avoid rate limits and bans:
 
 > ⚠️ **Golden Rule:** Never scrape and engage in the same session. Research in one job, engage in separate jobs spread over hours.
 
+### Agent-Driven Comments (CRITICAL)
+
+**Never use hardcoded comment templates.** The whole point of having an AI agent is dynamic, contextual responses.
+
+#### How It Works:
+1. **Agent reads the content** — tweet, article, post
+2. **Agent reads VOICE.md** — your personal style guide
+3. **Agent generates unique comment** — references something specific
+4. **Comment is logged** — prevents repetition
+
+#### VOICE.md Example:
+```markdown
+## Core Rules
+- 8th grade reading level
+- Max 2 sentences, 10-25 words
+- Ask questions when natural
+
+## ✅ DO
+"That's wild. What stack are you running?"
+"Spot on 💯"
+"Smart move. Did it work first try?"
+
+## ❌ DON'T
+"Fascinating approach!"
+"Great insights!"
+"This is fire! 🔥"
+```
+
+#### Comment Storage:
+```bash
+# Log to avoid repetition
+echo "2026-02-06 15:30 | @user | Your comment" >> ~/clawd/x-comments.txt
+```
+
+See `src/examples/CRONJOB_TEMPLATE.md` for full workflow.
+
 ---
 
 ## 🔐 Security

@@ -1,19 +1,29 @@
 # ClawSocial Cron Job Template
 
-**MANDATORY** — All cron jobs MUST use `notify report` command for notifications.
+**CRITICAL** — Agent MUST generate contextual, dynamic comments. NO hardcoded templates.
 
 ---
 
-## New Notification System
+## Voice & Style Guide
 
-Use the `notify report` command to send formatted notifications:
+Every engagement job MUST read the user's `VOICE.md` before writing comments.
 
-```bash
-npm run cli -- notify report <platform> <action> <target> --context='<JSON>'
+**Example VOICE.md location:** `/home/sonofanton/clawd/VOICE.md`
+
+### Key Rules:
+- **8th grade reading level** — simple words, short sentences
+- **Max 1-2 sentences** — 10-25 words for X/LinkedIn, 5-15 for Instagram
+- **Reference something SPECIFIC** about the post/article
+- **NO generic phrases:** "This is fire!", "Great insights!", "Love this!", "Amazing content!"
+- **Ask questions** when natural — engage, don't lecture
+- **Match the language** — English/Portuguese/Spanish as appropriate
+
+### Comment Storage:
+Log all comments to avoid repetition:
 ```
-
-**Platforms:** `twitter`, `linkedin`, `instagram`
-**Actions:** `like`, `comment`, `follow`, `connect`
+# ~/clawd/x-comments.txt
+2026-02-06 15:30 | @username | Your comment text here
+```
 
 ---
 
@@ -23,42 +33,40 @@ npm run cli -- notify report <platform> <action> <target> --context='<JSON>'
 X ENGAGEMENT — Like + Reply
 
 STEP 0: CONTEXT
+Read /home/sonofanton/clawd/VOICE.md — follow this style guide strictly.
 Read /home/sonofanton/clawd/x-engaged.txt for engaged IDs.
-Read /home/sonofanton/clawd/x-adolfo-conversations.txt for threads already replied to.
+Read /home/sonofanton/clawd/x-comments.txt for recent comments (avoid repetition).
 
 STEP 1: WARM-UP
-- Run: bird home -n 8 | bird mentions -n 5
-- OPTIONAL (30%): bird bookmarks -n 3
+bird home -n 8 && bird mentions -n 5
 
 STEP 2: FIND TARGET
 bird search "clawdbot OR moltbot OR openclaw" -n 30 --json
-Pick ONE post not in engaged list. Note: author, preview (100 chars), language.
+Pick ONE post not in engaged list. Note: author, preview (first 80 chars), language.
 
-STEP 3: LIKE (silent)
+STEP 3: LIKE (SILENT)
 cd /home/sonofanton/projects/clawsocial && npx tsx src/scripts/sync-bird-cookies.ts --env-file ~/.clawdbot/.env && CLAWSOCIAL_SILENT=1 npm run cli -- x like <tweet-url>
 
-STEP 4: REPLY
+STEP 4: WRITE REPLY
+Follow VOICE.md rules:
+- Max 2 sentences, 10-25 words
+- Use reaction starters: "That's wild.", "Spot on 💯", "Nice.", "Smart move."
+- End with a question when natural
+- NO: "Fascinating!", "Excellent analysis!", corporate buzzwords
+- Match the language (EN/PT/ES)
+
+STEP 5: SEND REPLY
 bird reply <tweet-url> "your reply"
 
-STEP 5: LOG
+STEP 6: LOG COMMENT
+Append to /home/sonofanton/clawd/x-comments.txt:
+$(date +%Y-%m-%d %H:%M) | @<author> | <your reply text>
+
+STEP 7: COMBINED NOTIFICATION
+cd /home/sonofanton/projects/clawsocial && npm run cli -- notify report twitter engagement <tweet-url> --context='{"author":"<username>","preview":"<first 80 chars>","reply":"<your reply text>","language":"<en/es/pt>","behaviors":"Home feed viewed, search performed"}'
+
+STEP 8: LOG TWEET ID
 Append tweet ID to /home/sonofanton/clawd/x-engaged.txt
-
-STEP 6: REPORT
-cd /home/sonofanton/projects/clawsocial && npm run cli -- notify report twitter comment <tweet-url> --context='{"tweet":"<url>","author":"<username>","preview":"<100 chars>","reply":"<text>","language":"<EN/PT>","behaviors":"Warm-up ✅"}'
-
-NO manual Telegram — ClawSocial handles it.
-```
-
-### Required Context Fields:
-```json
-{
-  "tweet": "https://x.com/user/status/123",
-  "author": "username",
-  "preview": "First 100 chars of original tweet...",
-  "reply": "Your reply text here",
-  "language": "EN",
-  "behaviors": "Warm-up ✅, Profile check ✅"
-}
 ```
 
 ---
@@ -80,15 +88,91 @@ X FOLLOW
 DO NOT send manual notification — ClawSocial handles it via --context.
 ```
 
-### Required Context Fields:
-```json
-{
-  "username": "targetuser",
-  "profileUrl": "https://x.com/targetuser",
-  "followers": 5200,
-  "queueRemaining": 12,
-  "behaviors": "Direct follow"
-}
+---
+
+## INSTAGRAM ENGAGEMENT (Agent-Driven)
+
+**CRITICAL:** Agent reads post content and generates contextual comment. NO hardcoded templates.
+
+```
+INSTAGRAM ENGAGEMENT
+
+STEP 0: CONTEXT
+Read /home/sonofanton/clawd/VOICE.md — follow this style guide strictly.
+Read /home/sonofanton/projects/clawsocial/db/instagram_state.json for follower list.
+
+STEP 1: PICK TARGET
+From state, find a follower where engaged=false. Get their username.
+
+STEP 2: GET THEIR POSTS
+cd /home/sonofanton/projects/clawsocial && npm run cli -- ig posts <username> -n 3
+Pick their most recent post. Note the post URL and what it's about (image/video description, caption if visible).
+
+STEP 3: LIKE
+cd /home/sonofanton/projects/clawsocial && CLAWSOCIAL_SILENT=1 npm run cli -- ig like <post-url>
+
+STEP 4: WRITE COMMENT
+Based on what you see in the post, write a SHORT contextual comment.
+Follow VOICE.md rules:
+- Max 1-2 sentences, 5-15 words
+- Reference something SPECIFIC about the post
+- NO generic: "This is fire!", "Love this!", "Amazing!"
+- Be casual, authentic
+
+STEP 5: COMMENT
+cd /home/sonofanton/projects/clawsocial && npm run cli -- ig comment <post-url> "<your contextual comment>"
+
+STEP 6: UPDATE STATE
+Update instagram_state.json: set engaged=true for this follower.
+
+STEP 7: NOTIFICATION
+cd /home/sonofanton/projects/clawsocial && npm run cli -- notify report instagram comment <post-url> --context='{"author":"@<username>","comment":"<your comment>","behaviors":"Profile viewed, post liked"}'
+
+If no posts found or engagement fails, try next follower. If all engaged, reply HEARTBEAT_OK.
+```
+
+---
+
+## LINKEDIN ENGAGEMENT (Agent-Driven)
+
+**CRITICAL:** Agent reads article content and generates contextual comment. NO hardcoded templates.
+
+```
+LINKEDIN ENGAGEMENT
+
+STEP 0: CONTEXT
+Read /home/sonofanton/clawd/VOICE.md — follow this style guide strictly.
+Read /home/sonofanton/projects/clawsocial/db/linkedin_state.json for pending articles.
+
+STEP 1: PICK TARGET
+From state.articles, find ONE where commented=false. Get the URL and title.
+If none available, reply HEARTBEAT_OK.
+
+STEP 2: READ THE ARTICLE
+Use web_fetch to get the article content. Understand what it's about.
+
+STEP 3: LIKE
+cd /home/sonofanton/projects/clawsocial && CLAWSOCIAL_SILENT=1 npm run cli -- linkedin like <article-url>
+
+STEP 4: WRITE COMMENT
+Based on the article content, write a SHORT contextual comment.
+Follow VOICE.md rules:
+- Max 1-2 sentences, 10-20 words
+- Reference something SPECIFIC from the article
+- NO generic: "Great insights!", "Thanks for sharing!", "Interesting perspective!"
+- Be direct, ask a follow-up question if natural
+- Professional but casual
+
+STEP 5: COMMENT
+cd /home/sonofanton/projects/clawsocial && npm run cli -- linkedin comment <article-url> "<your contextual comment>"
+
+STEP 6: UPDATE STATE
+Update linkedin_state.json: set commented=true, comment_text="<your comment>" for this article.
+
+STEP 7: NOTIFICATION
+cd /home/sonofanton/projects/clawsocial && npm run cli -- notify report linkedin comment <article-url> --context='{"author":"<author if known>","title":"<article title>","comment":"<your comment>","behaviors":"Article read, liked"}'
+
+Repeat for up to 3 articles total, with 2-3 min pause between each.
 ```
 
 ---
@@ -108,76 +192,39 @@ LINKEDIN CONNECTION
 DO NOT send manual notification — ClawSocial handles it via --context.
 ```
 
-### Required Context Fields:
-```json
-{
-  "username": "John Developer",
-  "profileUrl": "https://linkedin.com/in/john-developer",
-  "degree": "2nd",
-  "method": "Direct",
-  "behaviors": "Profile viewed"
-}
-```
-
 ---
 
-## LINKEDIN ENGAGEMENT
+## ❌ Anti-Patterns (DO NOT USE)
 
-```
-LINKEDIN ENGAGEMENT — Batch
+### Hardcoded Comment Templates
+```javascript
+// ❌ WRONG - Never do this
+const COMMENT_TEMPLATES = [
+  "Great shot! 📸",
+  "Love this! 🔥",
+  "This is fire! 🔥",
+  "Amazing content! 🙌",
+];
+comment = COMMENT_TEMPLATES[random];
 
-1. Execute:
-   cd /home/sonofanton/projects/clawsocial && npx tsx src/scripts/engage.ts --skip-search --max=4 2>&1
-
-2. For EACH article engaged, parse output for: title, author, URL, comment text
-
-3. Send report for EACH article:
-   cd /home/sonofanton/projects/clawsocial && npm run cli -- notify report linkedin comment <url> --context='{"url":"<article-url>","articleTitle":"<title>","articleAuthor":"<author>","comment":"<your comment>","sessionInfo":"Morning batch ([X]/4)","behaviors":"Warm-up ✅"}'
-
-NO manual Telegram — ClawSocial handles all notifications.
-```
-
-### Required Context Fields:
-```json
-{
-  "url": "https://linkedin.com/feed/update/...",
-  "articleTitle": "The Future of AI in Enterprise",
-  "articleAuthor": "Sarah Chen, CTO",
-  "comment": "Great insights! This is really valuable.",
-  "sessionInfo": "Morning batch (2/4)",
-  "behaviors": "Warm-up ✅"
-}
+// ✅ CORRECT - Agent generates based on content
+// 1. Read the post/article
+// 2. Read VOICE.md for style
+// 3. Write unique, contextual comment
 ```
 
----
-
-## INSTAGRAM ENGAGEMENT
-
+### Generic AI Phrases
 ```
-INSTAGRAM ENGAGEMENT
+❌ "Fascinating approach!"
+❌ "Excellent analysis!"
+❌ "Love this systematic approach!"
+❌ "The intersection of X and Y is where things get really interesting"
+❌ "This is a game-changer"
 
-1. Execute:
-   cd /home/sonofanton/projects/clawsocial && npx tsx src/scripts/ig-engage.ts --skip-scrape --max=1 2>&1
-
-2. Parse output for: username, action, post URL, comment text
-
-3. If failed, retry up to 3 times
-
-4. Send report:
-   cd /home/sonofanton/projects/clawsocial && npm run cli -- notify report instagram comment <post-url> --context='{"username":"<username>","postUrl":"<url or N/A>","comment":"<text>","action":"<Liked + Commented / Followed>","behaviors":"Warm-up ✅"}'
-
-NO manual Telegram — ClawSocial handles formatting.
-```
-
-### Required Context Fields:
-```json
-{
-  "username": "target_user",
-  "postUrl": "https://instagram.com/p/ABC123",
-  "comment": "Amazing work! 🔥",
-  "action": "Liked + Commented",
-  "behaviors": "Warm-up ✅"
-}
+✅ "That's wild. What stack are you running?"
+✅ "Spot on 💯"
+✅ "Smart move. How long did that take?"
+✅ "Nice setup. Did it work first try?"
 ```
 
 ---
@@ -187,19 +234,15 @@ NO manual Telegram — ClawSocial handles formatting.
 ### Actions (auto-notify via --context)
 ```bash
 # X
-npm run cli -- x like <url> --context='{"author":"user","preview":"...", "language":"EN", "behaviors":"..."}'
+npm run cli -- x like <url> --context='{"author":"user","preview":"...","language":"EN","behaviors":"..."}'
 npm run cli -- x follow <username> --context='{"username":"...","profileUrl":"...","followers":1234,"queueRemaining":10}'
 
 # LinkedIn
 npm run cli -- linkedin connect <url> --context='{"username":"...","profileUrl":"...","degree":"2nd","method":"Direct"}'
+npm run cli -- linkedin comment <url> "<text>" --context='{"author":"...","title":"...","comment":"...","behaviors":"..."}'
 
 # Instagram
-npm run cli -- ig comment <url> "<text>" --context='{"username":"...","postUrl":"...","comment":"...","action":"..."}'
-```
-
-### Manual Report (for combined actions)
-```bash
-npm run cli -- notify report twitter comment <url> --context='{"tweet":"...","author":"...","preview":"...","reply":"...","language":"EN","behaviors":"..."}'
+npm run cli -- ig comment <url> "<text>" --context='{"author":"...","comment":"...","behaviors":"..."}'
 ```
 
 ### Suppress Auto-Notify
@@ -207,82 +250,16 @@ Use when you want to send a combined report later:
 ```bash
 CLAWSOCIAL_SILENT=1 npm run cli -- x like <url>
 # Then later...
-npm run cli -- notify report twitter comment <url> --context='...'
-```
-
----
-
-## Retry System
-
-All ClawSocial commands now include automatic retries:
-
-```bash
-# Default: 3 retries with 5s delay between attempts
-npm run cli -- x like <url>
-
-# Custom retries
-npm run cli -- x like <url> --retries=5
-
-# Disable retries
-npm run cli -- x like <url> --retries=1
-```
-
-**Retry behavior:**
-- Default: 3 attempts
-- Delay: 5 seconds between attempts
-- Max: 10 retries
-- On failure: exits with code 1 + sends error notification
-
-**Console output on retry:**
-```
-⚠️ Attempt 1/3 failed for X like (https://x.com/...)
-   Error: Element not found
-   Retrying in 5s...
+npm run cli -- notify report twitter engagement <url> --context='...'
 ```
 
 ---
 
 ## Important Rules
 
-1. **NO manual Telegram notifications** — ClawSocial handles ALL formatting
-2. **ALWAYS pass --context** with ALL required fields
-3. **Use CLAWSOCIAL_SILENT=1** when action will be followed by combined report
-4. **Check docs/NOTIFICATION_TEMPLATES.md** for output format
-5. **Retries are automatic** — 3 attempts by default, configurable with --retries
-
----
-
-## Output Examples
-
-### X Engagement
-```
-🐦 **X ENGAGEMENT** ✅
-
-**Tweet:** https://x.com/user/status/123
-**Author:** @user
-**Preview:** "First 100 chars of the tweet..."
-
-**Actions:**
-• ❤️ Liked: ✅
-• 💬 Replied: "Your reply text here"
-
-**Language:** EN
-**Behaviors:** Warm-up ✅, Profile check ✅
-**Time:** 2026-02-06 10:15:30 UTC
-
-_ClawSocial X/Twitter Automation_
-```
-
-### X Follow
-```
-👥 **X FOLLOW** ✅
-
-**Target:** @targetuser
-**Profile:** https://x.com/targetuser
-**Followers:** 5.2K
-**Queue:** 12 accounts left
-
-**Time:** 2026-02-06 10:15:30 UTC
-
-_ClawSocial X/Twitter Automation_
-```
+1. **ALWAYS read VOICE.md first** — style guide is mandatory
+2. **NEVER use hardcoded comment templates** — generate dynamically
+3. **Reference something SPECIFIC** about the content
+4. **Log comments** to avoid repetition
+5. **NO manual Telegram notifications** — ClawSocial handles formatting
+6. **Match the language** of the original content

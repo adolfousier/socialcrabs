@@ -25,14 +25,14 @@ const SELECTORS = {
   navHome: 'a[aria-label="Home"]',
   primaryNav: 'nav[role="navigation"]',
   
-  // Tweet actions
-  likeButton: 'div[data-testid="like"]',
-  unlikeButton: 'div[data-testid="unlike"]',
-  retweetButton: 'div[data-testid="retweet"]',
-  unretweet: 'div[data-testid="unretweet"]',
-  retweetConfirm: 'div[role="menuitem"]:has-text("Repost")',
-  replyButton: 'div[data-testid="reply"]',
-  shareButton: 'div[data-testid="share"]',
+  // Tweet actions (use [data-testid] without element type — Twitter uses button/div interchangeably)
+  likeButton: '[data-testid="like"]',
+  unlikeButton: '[data-testid="unlike"]',
+  retweetButton: '[data-testid="retweet"]',
+  unretweet: '[data-testid="unretweet"]',
+  retweetConfirm: '[role="menuitem"]:has-text("Repost")',
+  replyButton: '[data-testid="reply"]',
+  shareButton: '[data-testid="share"]',
   
   // Compose
   tweetInput: 'div[data-testid="tweetTextarea_0"]',

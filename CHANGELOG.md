@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.41] - 2026-02-08
+
+### Fixed
+- **X reply button not found**: Twitter changed reply/like/retweet buttons from `<div>` to `<button>` elements. Updated all tweet action selectors from `div[data-testid="..."]` to `[data-testid="..."]` (element-agnostic). This was causing all reply attempts to fail silently while likes still worked (like flow had fallback selectors).
+
 ## [0.0.40] - 2026-02-08
 
 ### Added

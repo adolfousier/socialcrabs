@@ -149,6 +149,19 @@ export class BrowserManager {
     }
 
     const cookies = await context.cookies();
+
+    // Guard: don't save logged-out sessions over good ones
+    const criticalCookies: Record<string, string> = {
+      linkedin: 'li_at',
+      twitter: 'auth_token',
+      instagram: 'sessionid',
+    };
+    const requiredCookie = criticalCookies[platform];
+    if (requiredCookie && !cookies.some((c) => c.name === requiredCookie && c.value)) {
+      log.warn(`Skipping session save for ${platform} — missing ${requiredCookie} cookie (logged out)`);
+      return;
+    }
+
     const localStorage = await this.getLocalStorage(platform);
 
     const session: Session = {

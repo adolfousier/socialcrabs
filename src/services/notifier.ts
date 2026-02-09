@@ -277,9 +277,9 @@ function formatError(platform: Platform, action: ActionType, target: string, err
   const platformName = platform === 'twitter' ? 'X' : platform.toUpperCase();
   const actionName = action.toUpperCase();
   
-  // Escape error message to prevent markdown issues
+  // Escape error message but NOT URLs (dots in URLs break links)
   const safeError = escapeMarkdown(error);
-  const safeTarget = escapeMarkdown(target);
+  const safeTarget = target; // URLs must NOT be escaped
   
   const lines: string[] = [];
   lines.push(`${emoji} **${platformName} ${actionName}** ❌`);

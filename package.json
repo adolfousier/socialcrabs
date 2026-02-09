@@ -1,6 +1,6 @@
 {
   "name": "clawsocial",
-  "version": "0.0.43",
+  "version": "0.0.44",
   "description": "Production-ready social media automation platform with human-like behavior simulation",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

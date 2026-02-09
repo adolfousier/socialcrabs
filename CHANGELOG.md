@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.44] - 2026-02-09
+
+### Fixed
+- **Session save guard**: Never overwrite a valid session with logged-out cookies. Checks for critical auth cookies (`li_at`, `auth_token`, `sessionid`) before saving. Root cause of LinkedIn jobs failing in cascade after one hits a login wall.
+- **Notification URL escaping**: URLs in error notifications no longer get backslash-escaped (e.g. `www\.linkedin\.com` → `www.linkedin.com`).
+
 ## [0.0.43] - 2026-02-09
 
 ### Fixed

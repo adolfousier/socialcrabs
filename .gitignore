@@ -3,6 +3,8 @@ node_modules/
 
 # Build output
 dist/
+new_search.html 
+x-comments.txt
 
 # Environment files (NEVER commit these)
 .env
@@ -64,3 +66,4 @@ src/scraped/
 # Python scripts (development helpers)
 scripts/*.py
 scripts/linkedin-*.ts
+new_search.html\nx-comments.txt

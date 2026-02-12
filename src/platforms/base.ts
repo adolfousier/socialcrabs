@@ -238,7 +238,21 @@ export abstract class BasePlatformHandler {
       await quickDelay();
     }
 
-    await element.click();
+    try {
+      await element.click({ timeout: 5000 });
+    } catch (err) {
+      // Fallback 1: force click (bypasses overlay interception)
+      log.warn(`Click intercepted for ${selector}, retrying with force:true`);
+      try {
+        await element.click({ force: true, timeout: 5000 });
+      } catch {
+        // Fallback 2: JS-level dispatchEvent (bypasses all Playwright checks)
+        log.warn(`Force click failed for ${selector}, using JS dispatchEvent`);
+        await element.evaluate((el) => {
+          el.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+        });
+      }
+    }
   }
 
   /**

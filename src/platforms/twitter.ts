@@ -314,7 +314,19 @@ export class TwitterHandler extends BasePlatformHandler {
         return this.createErrorResult('like', payload.url, 'Like button not found', startTime, status);
       }
 
-      await likeButton.click();
+      try {
+        await likeButton.click({ timeout: 5000 });
+      } catch {
+        log.warn('Like button click intercepted, using force click');
+        try {
+          await likeButton.click({ force: true, timeout: 5000 });
+        } catch {
+          log.warn('Force click failed for like, using JS dispatchEvent');
+          await likeButton.evaluate((el) => {
+            el.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+          });
+        }
+      }
       await page.waitForTimeout(1500);
 
       // Verify like worked - check for unlike button
@@ -488,7 +500,19 @@ export class TwitterHandler extends BasePlatformHandler {
         return this.createErrorResult('follow', payload.username, 'Follow button not found', startTime, status);
       }
 
-      await followButton.click();
+      try {
+        await followButton.click({ timeout: 5000 });
+      } catch {
+        log.warn('Follow button click intercepted, using force click');
+        try {
+          await followButton.click({ force: true, timeout: 5000 });
+        } catch {
+          log.warn('Force click failed for follow, using JS dispatchEvent');
+          await followButton.evaluate((el) => {
+            el.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+          });
+        }
+      }
       await page.waitForTimeout(1500);
 
       // Verify follow worked

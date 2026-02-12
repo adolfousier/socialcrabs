@@ -30,8 +30,19 @@ export class BrowserManager {
    */
   async initialize(): Promise<void> {
     if (this.browser) {
-      log.warn('Browser already initialized');
-      return;
+      // Check if browser is still alive
+      try {
+        if (this.browser.isConnected()) {
+          log.warn('Browser already initialized');
+          return;
+        }
+      } catch {
+        // browser is dead
+      }
+      log.warn('Browser was dead, relaunching...');
+      this.browser = null;
+      this.contexts.clear();
+      this.pages.clear();
     }
 
     log.info('Launching browser...', {
@@ -67,7 +78,16 @@ export class BrowserManager {
 
     let context = this.contexts.get(platform);
     if (context) {
-      return context;
+      // Verify context is still alive
+      try {
+        await context.cookies(); // lightweight health check
+        return context;
+      } catch {
+        log.warn(`Stale browser context for ${platform}, recreating...`);
+        this.contexts.delete(platform);
+        this.pages.delete(platform);
+        context = undefined;
+      }
     }
 
     log.info(`Creating browser context for ${platform}`);
@@ -105,7 +125,14 @@ export class BrowserManager {
   async getPage(platform: Platform): Promise<Page> {
     let page = this.pages.get(platform);
     if (page && !page.isClosed()) {
-      return page;
+      // Verify page is still usable
+      try {
+        await page.evaluate(() => true);
+        return page;
+      } catch {
+        log.warn(`Stale page for ${platform}, recreating...`);
+        this.pages.delete(platform);
+      }
     }
 
     const context = await this.getContext(platform);
@@ -148,7 +175,13 @@ export class BrowserManager {
       return;
     }
 
-    const cookies = await context.cookies();
+    let cookies;
+    try {
+      cookies = await context.cookies();
+    } catch {
+      log.warn(`Cannot save session for ${platform} — context is closed`);
+      return;
+    }
 
     // Guard: don't save logged-out sessions over good ones
     const criticalCookies: Record<string, string> = {

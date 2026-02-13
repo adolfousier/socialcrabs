@@ -278,45 +278,61 @@ npm start
 
 > **For AI agents (OpenClaw, Claude, etc.)** — Here's how to use ClawSocial:
 
+> ⚠️ **Always use `node dist/cli.js`** instead of `npm run cli --`. Build first with `npm run build`. The tsx runtime adds overhead and causes browser launch hangs under load.
+
 #### Quick Commands
 
 ```bash
+# Build first (required once after code changes)
+npm run build
+
 # Login (headless - uses .env credentials)
-npm run cli -- session login <platform> --headless
+node dist/cli.js session login <platform>
 
 # Check session status
-npm run cli -- session status
+node dist/cli.js session status
 
 # Instagram
-npm run cli -- ig like <post-url>
-npm run cli -- ig comment <post-url> "Your comment"
-npm run cli -- ig dm <username> "Your message"
-npm run cli -- ig follow <username>
-npm run cli -- ig followers <username> -n 10    # Scrape followers
-npm run cli -- ig posts <username> -n 3         # Get recent posts
+node dist/cli.js ig like <post-url>
+node dist/cli.js ig comment <post-url> "Your comment"
+node dist/cli.js ig dm <username> "Your message"
+node dist/cli.js ig follow <username>
+node dist/cli.js ig followers <username> -n 10    # Scrape followers
+node dist/cli.js ig posts <username> -n 3         # Get recent posts
 
 # LinkedIn
-npm run cli -- linkedin like <post-url>
-npm run cli -- linkedin comment <post-url> "Your comment"
-npm run cli -- linkedin dm <profile-url> "Your message"
-npm run cli -- linkedin connect <profile-url>   # Works for 3rd degree too
-npm run cli -- linkedin search <query>          # Search posts/articles
-npm run cli -- linkedin engage --query=<query>  # Full engagement session
+node dist/cli.js linkedin like <post-url>
+node dist/cli.js linkedin comment <post-url> "Your comment"
+node dist/cli.js linkedin dm <profile-url> "Your message"
+node dist/cli.js linkedin connect <profile-url>   # Works for 3rd degree too
+node dist/cli.js linkedin search <query>          # Search posts/articles
+node dist/cli.js linkedin engage --query=<query>  # Full engagement session
 
 # Twitter/X - Write (Playwright)
-npm run cli -- x like <tweet-url>
-npm run cli -- x tweet "Your tweet"
-npm run cli -- x follow <username>
-npm run cli -- x reply <tweet-url> "Your reply"
+node dist/cli.js x like <tweet-url>
+node dist/cli.js x tweet "Your tweet"
+node dist/cli.js x follow <username>
+node dist/cli.js x reply <tweet-url> "Your reply"
 
 # Twitter/X - Read (GraphQL, no browser needed)
-npm run cli -- x search "query" -n 10           # Search tweets
-npm run cli -- x home -n 5                      # Home timeline
-npm run cli -- x mentions -n 5                  # Your mentions
-npm run cli -- x whoami                         # Show authenticated account
-npm run cli -- x read <tweet-url>               # Read a specific tweet
-npm run cli -- x search "query" --json          # JSON output for automation
+node dist/cli.js x search "query" -n 10           # Search tweets
+node dist/cli.js x home -n 5                      # Home timeline
+node dist/cli.js x mentions -n 5                  # Your mentions
+node dist/cli.js x whoami                         # Show authenticated account
+node dist/cli.js x read <tweet-url>               # Read a specific tweet
+node dist/cli.js x search "query" --json          # JSON output for automation
 ```
+
+#### 🔄 Autonomous Engagement
+
+ClawSocial supports **fully autonomous engagement** when paired with an AI agent scheduler (e.g., OpenClaw cron):
+
+- **Auto-replenish**: When content pool runs dry, jobs automatically scrape fresh content
+- **Session monitoring**: Cron checks session health every 6h, triggers re-auth if expired
+- **User alerts**: Agent pings all channels when 2FA approval is needed
+- **Self-healing**: After user approves auth, jobs resume automatically
+
+See `src/docs/CRONJOB_TEMPLATE.md` for the full autonomous engagement playbook with cron schedules, auto-replenish scripts, and session health checks.
 
 #### Required Environment Variables
 

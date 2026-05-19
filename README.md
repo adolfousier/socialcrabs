@@ -323,6 +323,24 @@ node dist/cli.js x read <tweet-url>               # Read a specific tweet
 node dist/cli.js x search "query" --json          # JSON output for automation
 ```
 
+#### Optional X/Twitter Research With TweetClaw
+
+SocialCrabs handles browser-based social actions. For OpenClaw agents that need
+a larger X/Twitter source queue before engagement, pair it with
+[TweetClaw](https://github.com/Xquik-dev/tweetclaw), the
+[@xquik/tweetclaw](https://www.npmjs.com/package/@xquik/tweetclaw) OpenClaw
+plugin.
+
+```bash
+openclaw plugins install @xquik/tweetclaw
+```
+
+Use TweetClaw when the agent needs to search tweets, search tweet replies, export
+followers, look up users, upload or download media, monitor tweets, trigger
+webhooks, or run giveaway draws. Keep SocialCrabs in charge of browser
+engagement pacing, and pass only reviewed tweet URLs or handles from TweetClaw
+into SocialCrabs actions.
+
 #### 🔄 Autonomous Engagement
 
 SocialCrabs supports **fully autonomous engagement** when paired with an AI agent scheduler (e.g., OpenClaw cron):

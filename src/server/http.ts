@@ -1,6 +1,9 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { log } from '../utils/logger.js';
+import { postTweetWithXurl } from '../utils/xurl-poster.js';
+import { createApiTweetActionResult } from '../utils/twitter-posting-policy.js';
+import { createOpenTwitterClientFromEnv } from '../opentwitter/index.js';
 import type { SocialCrabs } from '../index.js';
 import type { Platform } from '../types/index.js';
 
@@ -186,20 +189,14 @@ export function createHttpServer(socialCrabs: SocialCrabs, apiKey?: string) {
   // Twitter endpoints
   // ============================================================================
 
-  app.post('/api/twitter/like', async (req: Request, res: Response) => {
-    try {
-      const { url } = req.body;
-      if (!url) {
-        res.status(400).json({ error: 'URL required' });
-        return;
-      }
-      const result = await socialCrabs.twitter.like({ url });
-      res.json(result);
-    } catch (error) {
-      log.error('Error liking tweet', { error: String(error) });
-      res.status(500).json({ error: String(error) });
-    }
-  });
+  const twitterBrowserDisabled = (_req: Request, res: Response): void => {
+    res.status(410).json({
+      success: false,
+      error: 'X browser actions are disabled. SocialCrabs no longer opens X pages; use opentwitter/TWITTER_TOKEN for read-only collection and xurl/API for publishing.',
+    });
+  };
+
+  app.post('/api/twitter/like', twitterBrowserDisabled);
 
   app.post('/api/twitter/tweet', async (req: Request, res: Response) => {
     try {
@@ -208,7 +205,8 @@ export function createHttpServer(socialCrabs: SocialCrabs, apiKey?: string) {
         res.status(400).json({ error: 'Text required' });
         return;
       }
-      const result = await socialCrabs.twitter.post({ text });
+      const startedAt = Date.now();
+      const result = createApiTweetActionResult(text, postTweetWithXurl(text), startedAt);
       res.json(result);
     } catch (error) {
       log.error('Error posting tweet', { error: String(error) });
@@ -216,73 +214,28 @@ export function createHttpServer(socialCrabs: SocialCrabs, apiKey?: string) {
     }
   });
 
-  app.post('/api/twitter/reply', async (req: Request, res: Response) => {
-    try {
-      const { url, text } = req.body;
-      if (!url || !text) {
-        res.status(400).json({ error: 'URL and text required' });
-        return;
-      }
-      const result = await socialCrabs.twitter.comment({ url, text });
-      res.json(result);
-    } catch (error) {
-      log.error('Error replying to tweet', { error: String(error) });
-      res.status(500).json({ error: String(error) });
-    }
-  });
+  app.post('/api/twitter/reply', twitterBrowserDisabled);
 
-  app.post('/api/twitter/retweet', async (req: Request, res: Response) => {
-    try {
-      const { url } = req.body;
-      if (!url) {
-        res.status(400).json({ error: 'URL required' });
-        return;
-      }
-      const result = await socialCrabs.twitter.retweet(url);
-      res.json(result);
-    } catch (error) {
-      log.error('Error retweeting', { error: String(error) });
-      res.status(500).json({ error: String(error) });
-    }
-  });
+  app.post('/api/twitter/retweet', twitterBrowserDisabled);
 
-  app.post('/api/twitter/follow', async (req: Request, res: Response) => {
-    try {
-      const { username } = req.body;
-      if (!username) {
-        res.status(400).json({ error: 'Username required' });
-        return;
-      }
-      const result = await socialCrabs.twitter.follow({ username });
-      res.json(result);
-    } catch (error) {
-      log.error('Error following Twitter user', { error: String(error) });
-      res.status(500).json({ error: String(error) });
-    }
-  });
+  app.post('/api/twitter/follow', twitterBrowserDisabled);
 
-  app.post('/api/twitter/dm', async (req: Request, res: Response) => {
-    try {
-      const { username, message } = req.body;
-      if (!username || !message) {
-        res.status(400).json({ error: 'Username and message required' });
-        return;
-      }
-      const result = await socialCrabs.twitter.dm({ username, message });
-      res.json(result);
-    } catch (error) {
-      log.error('Error sending Twitter DM', { error: String(error) });
-      res.status(500).json({ error: String(error) });
-    }
-  });
+  app.post('/api/twitter/dm', twitterBrowserDisabled);
 
   app.get('/api/twitter/profile/:username', async (req: Request, res: Response) => {
     try {
       const username = req.params.username as string;
-      const profile = await socialCrabs.twitter.getProfile(username);
-      res.json(profile);
+      const result = await createOpenTwitterClientFromEnv().getUserInfo(username);
+      if (!result.success || !result.user) {
+        res.status(502).json({ error: result.error || 'opentwitter profile lookup failed' });
+        return;
+      }
+      res.json({
+        username: result.user.username,
+        displayName: result.user.name,
+      });
     } catch (error) {
-      log.error('Error getting Twitter profile', { error: String(error) });
+      log.error('Error getting Twitter profile via opentwitter', { error: String(error) });
       res.status(500).json({ error: String(error) });
     }
   });

@@ -1,0 +1,12 @@
+[
+  {
+    "username": "@example",
+    "reason": "example placeholder, replace before real use",
+    "status": "pending"
+  },
+  {
+    "username": "https://x.com/XDevelopers",
+    "reason": "official X developers account example",
+    "status": "pending"
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "accounts": [
+    {
+      "username": "yoyo_aigo",
+      "enabled": true,
+      "style": "中文财经科技，观点清晰，短段落",
+      "topics": ["AI", "半导体", "加密", "美股"],
+      "maxPostsPerDay": 5,
+      "imageSkill": "guizang-social-card-skill",
+      "squareAlias": "guicai"
+    },
+    {
+      "username": "blockheadchain_",
+      "enabled": true,
+      "style": "口语化，真实感受",
+      "topics": ["投资认知", "热点新闻", "生活", "加密", "美股", "AI"],
+      "maxPostsPerDay": 5,
+      "imageSkill": "ian-xiaohei-illustrations",
+      "squareAlias": "Ben",
+      "xurlApp": "socialcrabs"
+    }
+  ]
+}

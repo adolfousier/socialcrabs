@@ -46,6 +46,13 @@ test-results/
 tmp/
 temp/
 *.tmp
+__pycache__/
+*.pyc
+
+# Local run artifacts
+local-tests/
+queues/opentwitter-events.jsonl
+ian-xiaohei-illustrations/
 
 # Credentials (NEVER commit)
 *.pem

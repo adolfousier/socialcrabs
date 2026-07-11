@@ -1,0 +1,593 @@
+{
+  "repliedTweetIds": {
+    "2074552243068764167": {
+      "status": "error",
+      "sourceUrl": "https://x.com/cz_binance/status/2074552243068764167",
+      "replyText": "Query: 你是 @yoyo_aigo 的中文推特回复助手。 任务：阅读下面热门推文，用 AI 总结出一个简短、有信息量、有真人语气的中文回复。 必须应用 humanizer-zh 的原则：去掉…",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-07T17:53:22.208Z"
+    },
+    "2074578678810632453": {
+      "status": "error",
+      "sourceUrl": "https://x.com/justinsuntron/status/2074578678810632453",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-07T19:38:04.232Z"
+    },
+    "2074677600287625384": {
+      "status": "error",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074677600287625384",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T02:11:09.061Z"
+    },
+    "2074682633477321188": {
+      "status": "error",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074682633477321188",
+      "replyText": "我会先选一个真实业务流程试起来。账号和培训都容易做，难的是让 AI 真正进到每天的工作里。",
+      "replyScore": 79,
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}",
+      "at": "2026-07-08T02:42:22.911908Z"
+    },
+    "2074676836395889146": {
+      "status": "error",
+      "sourceUrl": "https://x.com/_FORAB/status/2074676836395889146",
+      "replyText": "如果这事继续推进，影响不只是供应链价格，更多是苹果在中美技术夹缝里的取舍。",
+      "replyScore": 74,
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}",
+      "at": "2026-07-08T02:42:23.643975Z"
+    },
+    "2074673829776073064": {
+      "status": "error",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074673829776073064",
+      "replyText": "哈哈，这种工具最妙的地方是看起来像玄学，实际是在帮人少冲动几次。",
+      "replyScore": 70,
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}",
+      "at": "2026-07-08T02:42:24.330391Z"
+    },
+    "2074664493746102316": {
+      "status": "error",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074664493746102316",
+      "replyText": "写作这事很多人不是不会表达，是脑子里没先搭好结构。工具能补一部分，但还是得自己想清楚。",
+      "replyScore": 61,
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}",
+      "at": "2026-07-08T02:42:25.055906Z"
+    },
+    "2074691190427959462": {
+      "status": "error",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074691190427959462",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"account_id\":2026574318705287168,\n  \"title\":\"CreditsDepleted\",\n  \"detail\":\"Your enrolled account [2026574318705287168] does not have any credits to fulfill this request.\",\n  \"type\":\"https://api.twitter.com/2/problems/credits\"\n}\n",
+      "at": "2026-07-08T03:05:10.930Z"
+    },
+    "2074691419479183552": {
+      "status": "error",
+      "sourceUrl": "https://x.com/_FORAB/status/2074691419479183552",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"account_id\":2026574318705287168,\n  \"title\":\"CreditsDepleted\",\n  \"detail\":\"Your enrolled account [2026574318705287168] does not have any credits to fulfill this request.\",\n  \"type\":\"https://api.twitter.com/2/problems/credits\"\n}\n",
+      "at": "2026-07-08T03:06:03.779Z"
+    },
+    "2074695977026682918": {
+      "status": "error",
+      "sourceUrl": "https://x.com/_FORAB/status/2074695977026682918",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "NOTIFY_TELEGRAM_BOT_TOKEN and NOTIFY_TELEGRAM_CHAT_ID are required",
+      "at": "2026-07-08T03:24:08.890Z"
+    },
+    "2074700345847292202": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/justinsuntron/status/2074700345847292202",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "at": "2026-07-08T03:41:32.586Z"
+    },
+    "2074714532656885965": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2074714532656885965",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "at": "2026-07-08T04:37:54.464Z"
+    },
+    "2074720558244311272": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2074720558244311272",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "at": "2026-07-08T05:01:55.429Z"
+    },
+    "2074720634085470617": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074720634085470617",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "at": "2026-07-08T05:02:08.432Z"
+    },
+    "2074735481720381884": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074735481720381884",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "at": "2026-07-08T06:01:11.193Z"
+    },
+    "2074738033325375668": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2074738033325375668",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "at": "2026-07-08T06:11:24.212Z"
+    },
+    "2074741192869503090": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2074741192869503090",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "at": "2026-07-08T06:23:50.724Z"
+    },
+    "2074749322709631004": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/justinsuntron/status/2074749322709631004",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "at": "2026-07-08T06:56:12.952Z"
+    },
+    "2074749431401066997": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2074749431401066997",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "at": "2026-07-08T06:56:36.178Z"
+    },
+    "2074751084870942983": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074751084870942983",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "at": "2026-07-08T07:03:11.731Z"
+    },
+    "2074776109074583565": {
+      "status": "error",
+      "sourceUrl": "https://x.com/aleabitoreddit/status/2074776109074583565",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T08:42:43.761Z"
+    },
+    "2074777921978589480": {
+      "status": "error",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074777921978589480",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T08:49:46.558Z"
+    },
+    "2074780042316701721": {
+      "status": "error",
+      "sourceUrl": "https://x.com/justinsuntron/status/2074780042316701721",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T08:58:10.834Z"
+    },
+    "2074796697482670089": {
+      "status": "error",
+      "sourceUrl": "https://x.com/chuge857/status/2074796697482670089",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T10:04:29.132Z"
+    },
+    "2074797679025197404": {
+      "status": "error",
+      "sourceUrl": "https://x.com/daidaibtc/status/2074797679025197404",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T10:08:23.980Z"
+    },
+    "2074799339680202869": {
+      "status": "error",
+      "sourceUrl": "https://x.com/aleabitoreddit/status/2074799339680202869",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T10:14:56.891Z"
+    },
+    "2074800682646057460": {
+      "status": "error",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074800682646057460",
+      "replyText": "Query: You are the X/Twitter reply assistant for @yoyo_aigo. Use the generic humanizer skill: remov…",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T10:20:14.464Z"
+    },
+    "2074825156904816921": {
+      "status": "error",
+      "sourceUrl": "https://x.com/_FORAB/status/2074825156904816921",
+      "replyText": "Messages: 2 (1 user, 0 tool calls)",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T11:57:39.759Z"
+    },
+    "2074833476633911724": {
+      "status": "error",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074833476633911724",
+      "replyText": "Messages: 4 (1 user, 2 tool calls)",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T12:30:36.754Z"
+    },
+    "2074836588505551350": {
+      "status": "error",
+      "sourceUrl": "https://x.com/justinsuntron/status/2074836588505551350",
+      "replyText": "Messages: 2 (1 user, 0 tool calls)",
+      "error": "\u001b[31mError: HTTP Error: Post \"https://api.x.com/2/tweets\": EOF (cause: Post \"https://api.x.com/2/tweets\": EOF)\u001b[0m\n",
+      "at": "2026-07-08T12:42:53.062Z"
+    },
+    "2074837463164670459": {
+      "status": "error",
+      "sourceUrl": "https://x.com/chuge857/status/2074837463164670459",
+      "replyText": "Messages: 2 (1 user, 0 tool calls)",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T12:46:27.532Z"
+    },
+    "2074847560385400883": {
+      "status": "error",
+      "sourceUrl": "https://x.com/_FORAB/status/2074847560385400883",
+      "replyText": "Messages: 2 (1 user, 0 tool calls)",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T13:26:31.463Z"
+    },
+    "2074853877502103732": {
+      "status": "error",
+      "sourceUrl": "https://x.com/artinmemes/status/2074853877502103732",
+      "replyText": "Messages: 2 (1 user, 0 tool calls)",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T13:51:44.896Z"
+    },
+    "2074865309337727054": {
+      "status": "error",
+      "sourceUrl": "https://x.com/justinsuntron/status/2074865309337727054",
+      "replyText": "Messages: 2 (1 user, 0 tool calls)",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T14:37:03.352Z"
+    },
+    "2074878211738275899": {
+      "status": "error",
+      "sourceUrl": "https://x.com/_FORAB/status/2074878211738275899",
+      "replyText": "Duration: 6s",
+      "error": "{\n  \"detail\":\"Reply to this conversation is not allowed because you have not been mentioned or otherwise engaged by the author of the post you are replying to.\",\n  \"type\":\"about:blank\",\n  \"title\":\"Forbidden\",\n  \"status\":403\n}\n",
+      "at": "2026-07-08T15:28:23.473Z"
+    },
+    "2074965761345642660": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/aleabitoreddit/status/2074965761345642660",
+      "replyText": "Duration: 7s",
+      "at": "2026-07-08T21:16:15.023Z"
+    },
+    "2074982133303546016": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/cz_binance/status/2074982133303546016",
+      "replyText": "Duration: 7s",
+      "at": "2026-07-08T22:21:17.209Z"
+    },
+    "2075007524474863625": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075007524474863625",
+      "replyText": "Duration: 7s",
+      "at": "2026-07-09T00:02:11.401Z"
+    },
+    "2075047869317534177": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075047869317534177",
+      "replyText": "Goodbye! ⚕",
+      "at": "2026-07-09T02:42:25.834Z"
+    },
+    "2075051756137087184": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075051756137087184",
+      "replyText": "Session: 20260709_105747_bdd700",
+      "at": "2026-07-09T02:58:15.420Z"
+    },
+    "2075052081321562396": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075052081321562396",
+      "replyText": "没吃到房地产红利，倒是刚好撞上 AI 改写职业起点。00 后看新时代，可能比老登少点包袱。",
+      "at": "2026-07-09T02:59:23.270Z",
+      "fixNote": "corrected bad Hermes CLI Session metadata cleanup on 2026-07-09"
+    },
+    "2075058031008837962": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075058031008837962",
+      "replyText": "这些命名确实很会借传统意象，不只是好听，也是在给技术线加一层自己的叙事。",
+      "at": "2026-07-09T03:22:52.108Z",
+      "fixNote": "corrected bad Hermes CLI resume metadata cleanup on 2026-07-09"
+    },
+    "2075063525085753781": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075063525085753781",
+      "replyText": "这句确实很特朗普，拿危险开玩笑还顺手怼记者。不好说幽默多高级，但现场压迫感肯定拉满了。",
+      "at": "2026-07-09T03:44:42.210Z"
+    },
+    "2075077405337931965": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075077405337931965",
+      "replyText": "这组数据挺能说明问题，稳定币已经不只是交易工具了，更像很多地区的美元入口，需求比想象中硬。",
+      "at": "2026-07-09T04:40:00.305Z"
+    },
+    "2075085034990485680": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075085034990485680",
+      "replyText": "有些机会确实不是熬出来的。长期只奖励会演的人，靠谱反而会变成被消耗的理由，早点看清也挺重要。",
+      "at": "2026-07-09T05:10:08.548Z"
+    },
+    "2075085833867260023": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/daidaibtc/status/2075085833867260023",
+      "replyText": "这几年真是啥都能涨，唯独账户不太配合。看到蛋白粉都跑赢收益率，确实有点绷不住。",
+      "at": "2026-07-09T05:13:20.277Z"
+    },
+    "2075086237342605816": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075086237342605816",
+      "replyText": "增程这个选择挺现实，30万段也能理解。外观像不像先不说，最后还是得看能耗和体验。",
+      "at": "2026-07-09T05:15:05.068Z"
+    },
+    "2075088060505829801": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075088060505829801",
+      "replyText": "这话听着有点现实主义，中国更在意稳住能源和贸易，不轻易下场，反而是最划算的选择。",
+      "at": "2026-07-09T05:22:15.279Z"
+    },
+    "2075124342208475148": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075124342208475148",
+      "replyText": "API call failed after 3 retries: Connection error.",
+      "at": "2026-07-09T07:47:56.696Z"
+    },
+    "2075131088515559445": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075131088515559445",
+      "replyText": "API call failed after 3 retries: Connection error.",
+      "at": "2026-07-09T08:13:51.558Z"
+    },
+    "2075229182003450081": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/cz_binance/status/2075229182003450081",
+      "replyText": "That’s a pretty big step for everyday crypto payments in Kazakhstan.",
+      "at": "2026-07-09T14:42:55.475Z"
+    },
+    "2075249859075191295": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075249859075191295",
+      "replyText": "平台把用户沟通管得太死，确实会消耗信任。员工期权这种事如果处理不好，也很容易反噬公司长期价值。",
+      "at": "2026-07-09T16:05:09.079Z"
+    },
+    "2075259620994720089": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/BroBean88/status/2075259620994720089",
+      "replyText": "科技股现在确实不是一般的晃，连相对波动都冲到历史极值附近了，追高还是得多留点余地。",
+      "at": "2026-07-09T16:43:52.990Z"
+    },
+    "2075294578920525835": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/justinsuntron/status/2075294578920525835",
+      "replyText": "Pretty wild to see how far BitTorrent has come since that Launchpad debut.",
+      "at": "2026-07-09T19:02:50.034Z"
+    },
+    "2075370415719948612": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075370415719948612",
+      "replyText": "这波节奏确实太密了，感觉各家都在抢窗口期。Gemini如果只是常规升级，存在感可能会被压得很低。",
+      "at": "2026-07-10T00:04:09.073Z"
+    },
+    "2075385011864482177": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075385011864482177",
+      "replyText": "稳定不是熬年头，是你真能撑住一块关键价值。公司离不开的，往往不是最忙的那个人。",
+      "at": "2026-07-10T01:02:15.778Z"
+    },
+    "2075397203095609668": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075397203095609668",
+      "replyText": "这事挺耐人寻味的，嘴上各做各的平台，真到需要扩散和讨论时，X 的公共广场属性还是很难绕开。",
+      "at": "2026-07-10T01:50:41.324Z"
+    },
+    "2075403762274029936": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075403762274029936",
+      "replyText": "感觉意义变小了，真正该按高质量产出排节奏。人硬熬八小时，模型也不一定帮你多产出。",
+      "at": "2026-07-10T02:16:43.331Z"
+    },
+    "2075408798085447941": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075408798085447941",
+      "replyText": "中年之后身体真不是小事，再厉害的人也扛不住长期透支。名声和成就之外，能稳稳活着才是底牌。",
+      "at": "2026-07-10T02:36:41.654Z"
+    },
+    "2075419351243694486": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/justinsuntron/status/2075419351243694486",
+      "replyText": "Markets come and go, but it’s pretty wild how steadily USDT on TRON keeps growing.",
+      "at": "2026-07-10T03:18:41.161Z"
+    },
+    "2075424605481898199": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075424605481898199",
+      "replyText": "账上现金多了买核心地段资产，倒也不奇怪。比起讲故事，至少这步看起来挺务实。",
+      "at": "2026-07-10T03:39:29.981Z"
+    },
+    "2075424842950824361": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075424842950824361",
+      "replyText": "现金多到一定程度，买楼也算是配置安全垫吧。只是拼多多这步挺有信号感，说明线下资产的价值又被重新看见了。",
+      "at": "2026-07-10T03:40:26.478Z"
+    },
+    "2075436461512650782": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/justinsuntron/status/2075436461512650782",
+      "replyText": "That kind of flexibility is exactly what stablecoin payments need to feel effortless.",
+      "at": "2026-07-10T04:26:41.190Z"
+    },
+    "2075437104746856680": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/justinsuntron/status/2075437104746856680",
+      "replyText": "Tiny details can hold the biggest memories.",
+      "at": "2026-07-10T04:29:09.146Z"
+    },
+    "2075438204862497224": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075438204862497224",
+      "replyText": "这种话题最怕站着说话不腰疼，环保当然重要，但先承认普通人夏天真会热。",
+      "at": "2026-07-10T04:33:32.831Z"
+    },
+    "2075445132103745583": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/justinsuntron/status/2075445132103745583",
+      "replyText": "这个数据挺有意思，说明交易入口和用户流量本身也能长出链价值，后面要看持续性。",
+      "at": "2026-07-10T05:01:08.560Z"
+    },
+    "2075446164774912492": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075446164774912492",
+      "replyText": "选项目先看适配度挺关键。能放大自己的优势、需求被验证、流程又简单，才更容易长期做下去。",
+      "at": "2026-07-10T05:05:08.640Z"
+    },
+    "2075450351931814084": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075450351931814084",
+      "replyText": "大厂各有各的焦虑，绩效、裁员、上市、搬办公区，最后都变成员工茶水间的共同话题。",
+      "at": "2026-07-10T05:21:46.485Z"
+    },
+    "2075452439105565168": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075452439105565168",
+      "replyText": "这一步挺关键的，回收火箭不是炫技，真跑通了才会慢慢改变发射成本和节奏。中国航天这条路算是正式加速了。",
+      "at": "2026-07-10T05:30:08.494Z"
+    },
+    "2075476404779745549": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/daidaibtc/status/2075476404779745549",
+      "replyText": "有时候真不是行情多难，而是预期太飘。涨一点就上头，跌一点就怀疑人生，先看清自己在赚什么钱吧。",
+      "at": "2026-07-10T07:05:27.340Z"
+    },
+    "2075476844086952022": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/daidaibtc/status/2075476844086952022",
+      "replyText": "情绪跟着一天涨跌跑，确实容易把自己搞懵。市场没那么简单，先看清自己到底会不会亏得明白。",
+      "at": "2026-07-10T07:07:13.837Z"
+    },
+    "2075482768080023982": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/justinsuntron/status/2075482768080023982",
+      "replyText": "Looks like the market just found a new ceiling.",
+      "at": "2026-07-10T07:30:37.364Z"
+    },
+    "2075506311467557249": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075506311467557249",
+      "replyText": "可以分享方法，但别把自己的判断和压箱底经验全摊开。工具会变，真正值钱的还是你怎么取舍。",
+      "at": "2026-07-10T09:04:10.299Z"
+    },
+    "2075518024808083475": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/artinmemes/status/2075518024808083475",
+      "replyText": "尾盘按计划做没问题，周一能不能赢还是看盘面给不给脸。别上头，仓位舒服最重要。",
+      "at": "2026-07-10T09:50:48.924Z"
+    },
+    "2075521159366660211": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075521159366660211",
+      "replyText": "真正要紧的不是跟 AI 比手速，而是尽早把它放进自己的工作流里，顺便练判断力。",
+      "at": "2026-07-10T10:03:41.774Z"
+    },
+    "2075532734986912014": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/justinsuntron/status/2075532734986912014",
+      "replyText": "Rails matter more than the hype when real demand shows up.",
+      "at": "2026-07-10T10:49:22.524Z"
+    },
+    "2075536635903828363": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075536635903828363",
+      "replyText": "豪华车在中国的护城河确实变窄了，新能源这轮竞争不只是换动力，产品节奏和本土理解都得跟上。",
+      "at": "2026-07-10T11:04:46.345Z"
+    },
+    "2075575843414536578": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075575843414536578",
+      "replyText": "能安静待在一起确实很重要，不用一直找话题，也不互相消耗，日子才有可能过得稳。",
+      "at": "2026-07-10T13:40:37.231Z"
+    },
+    "2075589249743863895": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075589249743863895",
+      "replyText": "术语看多了确实容易晕，还是跟着具体案例跑一遍最有效，能用起来才算真的懂。",
+      "at": "2026-07-10T14:33:48.230Z"
+    },
+    "2075590371531493729": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/aleabitoreddit/status/2075590371531493729",
+      "replyText": "Retail always finds a way to turn any listing into an options casino.",
+      "at": "2026-07-10T14:38:17.576Z"
+    },
+    "2075592861538787606": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/artinmemes/status/2075592861538787606",
+      "replyText": "半年报确实是关键，喊多喊空都先放一边，最后还是要看增长和利润能不能撑住。",
+      "at": "2026-07-10T14:48:05.841Z"
+    },
+    "2075597676654252068": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075597676654252068",
+      "replyText": "265亿美金还7倍超额，确实是现象级热度了。韩国国旗灯这细节，也挺有象征意味。",
+      "at": "2026-07-10T15:07:11.669Z"
+    },
+    "2075599280434487788": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075599280434487788",
+      "replyText": "这个认购倍数确实夸张，韩国项目赴美敲钟还能让摩根大通点灯，排面和市场情绪都拉满了",
+      "at": "2026-07-10T15:13:51.961Z"
+    },
+    "2075611260771852590": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/aleabitoreddit/status/2075611260771852590",
+      "replyText": "That Monday reaction in Korea is going to be really interesting to watch.",
+      "at": "2026-07-10T16:01:22.609Z"
+    },
+    "2075627286024610050": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075627286024610050",
+      "replyText": "可以试，但我更看重稳定输出和可控性。单篇看着不AI不够，连续多跑几轮才知道差距。",
+      "at": "2026-07-10T17:05:03.404Z"
+    },
+    "2075721982264394030": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075721982264394030",
+      "replyText": "是这个方向。单看 token 单价很容易算偏，真正贵的往往是重试、返工和没人接得住的半成品。",
+      "at": "2026-07-10T23:21:14.521Z"
+    },
+    "2075734565000290734": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075734565000290734",
+      "replyText": "这套评估挺务实的，先看真实任务里的成本、接管和验收，比盯着榜单更能判断一个工作流到底能不能用。",
+      "at": "2026-07-11T00:11:09.643Z"
+    },
+    "2075737195756097629": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075737195756097629",
+      "replyText": "确实，暴论更容易被看见，但认真写的东西才更耐看。流量会过去，判断力还是得慢慢攒。",
+      "at": "2026-07-11T00:21:36.470Z"
+    },
+    "2075762961717846373": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075762961717846373",
+      "replyText": "这招确实有用，但感觉不一定非得骂它，本质还是把标准说清楚：谁读、读到什么程度。",
+      "at": "2026-07-11T02:04:05.639Z"
+    },
+    "2075792610124554679": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/justinsuntron/status/2075792610124554679",
+      "replyText": "稳定币发行量回落更像是行情降温后的正常收缩，真正值得看的是支付、结算这些场景有没有继续长出来。",
+      "at": "2026-07-11T04:01:48.706Z"
+    },
+    "2075808049390854617": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2075808049390854617",
+      "replyText": "现在更新节奏真的有点吓人，模型越来越像快消品了。年底先别想，能跟上这周就不错了。",
+      "at": "2026-07-11T05:03:12.456Z"
+    },
+    "2075808227858829392": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075808227858829392",
+      "replyText": "这种文件有意思，但描述里随风移动、无机动动作其实很关键，先别急着往外星人上靠。",
+      "at": "2026-07-11T05:03:50.682Z"
+    },
+    "2075816218242789594": {
+      "status": "notified",
+      "sourceUrl": "https://x.com/_FORAB/status/2075816218242789594",
+      "replyText": "开源 AI 本来就很难靠单边政策按住，真要管安全风险，可能更需要透明标准，而不是先把它当成对手。",
+      "at": "2026-07-11T05:35:40.571Z"
+    }
+  }
+}

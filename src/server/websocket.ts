@@ -1,5 +1,8 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { log } from '../utils/logger.js';
+import { postTweetWithXurl } from '../utils/xurl-poster.js';
+import { createApiTweetActionResult } from '../utils/twitter-posting-policy.js';
+import { createOpenTwitterClientFromEnv } from '../opentwitter/index.js';
 import type { SocialCrabs } from '../index.js';
 import type { WSMessage, Platform, ActionType } from '../types/index.js';
 
@@ -222,32 +225,26 @@ export class WebSocketManager {
     action: ActionType,
     payload: Record<string, unknown>
   ): Promise<unknown> {
-    const handler = this.socialCrabs.twitter;
-
     switch (action) {
+      case 'post': {
+        const text = payload.text as string;
+        const startedAt = Date.now();
+        return createApiTweetActionResult(text, postTweetWithXurl(text), startedAt);
+      }
+      case 'view_profile': {
+        const username = payload.username as string;
+        const result = await createOpenTwitterClientFromEnv().getUserInfo(username);
+        if (!result.success || !result.user) throw new Error(result.error || 'opentwitter profile lookup failed');
+        return { username: result.user.username, displayName: result.user.name };
+      }
       case 'like':
-        return handler.like({ url: payload.url as string });
       case 'comment':
       case 'reply':
-        return handler.comment({
-          url: payload.url as string,
-          text: payload.text as string,
-        });
       case 'follow':
-        return handler.follow({ username: payload.username as string });
       case 'unfollow':
-        return handler.unfollow({ username: payload.username as string });
       case 'dm':
-        return handler.dm({
-          username: payload.username as string,
-          message: payload.message as string,
-        });
-      case 'post':
-        return handler.post({ text: payload.text as string });
       case 'retweet':
-        return handler.retweet(payload.url as string);
-      case 'view_profile':
-        return handler.getProfile(payload.username as string);
+        throw new Error('X browser actions are disabled. SocialCrabs no longer opens X pages; use opentwitter/TWITTER_TOKEN for read-only collection and xurl/API for publishing.');
       default:
         throw new Error(`Unknown Twitter action: ${action}`);
     }

@@ -140,7 +140,7 @@ export class SocialCrabs {
       case 'instagram':
         return this.instagram.isLoggedIn();
       case 'twitter':
-        return this.twitter.isLoggedIn();
+        return false;
       case 'linkedin':
         return this.linkedin.isLoggedIn();
       default:
@@ -156,7 +156,7 @@ export class SocialCrabs {
       case 'instagram':
         return this.instagram.login();
       case 'twitter':
-        return this.twitter.login();
+        throw new Error('X browser login disabled. Use opentwitter/TWITTER_TOKEN for read-only collection and xurl/API for publishing.');
       case 'linkedin':
         return this.linkedin.login();
       default:
@@ -176,7 +176,7 @@ export class SocialCrabs {
       case 'instagram':
         return this.instagram.loginWithCredentials(username, password);
       case 'twitter':
-        return this.twitter.loginWithCredentials(username, password);
+        throw new Error('X browser credential login disabled. Use opentwitter/TWITTER_TOKEN for read-only collection and xurl/API for publishing.');
       case 'linkedin':
         return this.linkedin.loginWithCredentials(username, password);
       default:
@@ -193,8 +193,7 @@ export class SocialCrabs {
         await this.instagram.logout();
         break;
       case 'twitter':
-        await this.twitter.logout();
-        break;
+        throw new Error('X browser logout disabled. SocialCrabs no longer manages X browser sessions; remove TWITTER_TOKEN from .env if you want to disconnect opentwitter.');
       case 'linkedin':
         await this.linkedin.logout();
         break;

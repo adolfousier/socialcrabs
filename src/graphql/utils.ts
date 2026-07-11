@@ -1,4 +1,4 @@
-import type { Tweet, MediaItem } from './types.js';
+import type { Tweet, MediaItem, XUser } from './types.js';
 
 export function firstText(...values: unknown[]): string | undefined {
   for (const value of values) {
@@ -139,6 +139,55 @@ export function parseTweetsFromInstructions(instructions: any[], quoteDepth = 1)
     }
   }
   return tweets;
+}
+
+export function parseUsersFromInstructions(instructions: any[]): XUser[] {
+  const users: XUser[] = [];
+  const seen = new Set<string>();
+
+  const pushUser = (result: any) => {
+    const user = mapUserResult(result);
+    if (!user || seen.has(user.id)) return;
+    seen.add(user.id);
+    users.push(user);
+  };
+
+  for (const instruction of instructions ?? []) {
+    for (const entry of instruction.entries ?? []) {
+      const content = entry.content;
+      pushUser(content?.itemContent?.user_results?.result);
+      pushUser(content?.item?.itemContent?.user_results?.result);
+      for (const item of content?.items ?? []) {
+        pushUser(item?.item?.itemContent?.user_results?.result);
+        pushUser(item?.itemContent?.user_results?.result);
+        pushUser(item?.content?.itemContent?.user_results?.result);
+      }
+    }
+  }
+
+  return users;
+}
+
+function mapUserResult(result: any): XUser | undefined {
+  if (!result || result.__typename === 'UserUnavailable') return undefined;
+  const legacy = result.legacy;
+  const core = result.core;
+  const id = result.rest_id?.toString();
+  const username = legacy?.screen_name ?? core?.screen_name;
+  const name = legacy?.name ?? core?.name ?? username;
+  if (!id || !username) return undefined;
+
+  return {
+    id,
+    username,
+    name: name || username,
+    description: legacy?.description,
+    followersCount: legacy?.followers_count,
+    followingCount: legacy?.friends_count,
+    isBlueVerified: Boolean(result.is_blue_verified),
+    profileImageUrl: legacy?.profile_image_url_https,
+    createdAt: legacy?.created_at,
+  };
 }
 
 export function extractCursorFromInstructions(instructions: any[], cursorType = 'Bottom'): string | undefined {

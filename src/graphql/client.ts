@@ -1,8 +1,8 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { TWITTER_API_BASE, QUERY_IDS, SETTINGS_SCREEN_NAME_REGEX, SETTINGS_USER_ID_REGEX, SETTINGS_NAME_REGEX } from './constants.js';
-import { buildSearchFeatures, buildHomeTimelineFeatures } from './features.js';
-import { parseTweetsFromInstructions, extractCursorFromInstructions } from './utils.js';
-import type { Tweet, XClientOptions, SearchResult, UserResult } from './types.js';
+import { buildSearchFeatures, buildHomeTimelineFeatures, buildFollowingFeatures } from './features.js';
+import { parseTweetsFromInstructions, extractCursorFromInstructions, parseUsersFromInstructions } from './utils.js';
+import type { Tweet, XClientOptions, SearchResult, UserResult, UserListResult } from './types.js';
 
 const BEARER_TOKEN = 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA';
 
@@ -71,6 +71,10 @@ export class XGraphQLClient {
 
   private getHomeQueryIds(): string[] {
     return [...new Set([this.getQueryId('HomeTimeline'), 'edseUwk9sP5Phz__9TIRnA'])];
+  }
+
+  private getUserListQueryIds(operationName: 'Followers' | 'Following'): string[] {
+    return [...new Set([this.getQueryId(operationName), operationName === 'Followers' ? 'SFYY3WsgwjlXSLlfnEUE4A' : 'mWYeougg_ocJS2Vr1Vt28w'])];
   }
 
   /**
@@ -175,6 +179,124 @@ export class XGraphQLClient {
       }
     }
     return { success: false, tweets: [], error: 'All query IDs failed' };
+  }
+
+  /**
+   * Get followers for a user ID
+   */
+  async getFollowers(userId: string, count = 50, cursor?: string): Promise<UserListResult> {
+    return this.getUserList('Followers', userId, count, cursor);
+  }
+
+  /**
+   * Get accounts followed by a user ID
+   */
+  async getFollowing(userId: string, count = 50, cursor?: string): Promise<UserListResult> {
+    return this.getUserList('Following', userId, count, cursor);
+  }
+
+  private async getUserList(
+    operationName: 'Followers' | 'Following',
+    userId: string,
+    count = 50,
+    cursor?: string
+  ): Promise<UserListResult> {
+    const features = buildFollowingFeatures();
+    const queryIds = this.getUserListQueryIds(operationName);
+    let lastError = '';
+
+    for (const queryId of queryIds) {
+      const variables: Record<string, unknown> = {
+        userId,
+        count,
+        includePromotedContent: false,
+      };
+      if (cursor) variables.cursor = cursor;
+
+      const params = new URLSearchParams({
+        variables: JSON.stringify(variables),
+        features: JSON.stringify(features),
+      });
+      const url = `${TWITTER_API_BASE}/${queryId}/${operationName}?${params.toString()}`;
+
+      try {
+        const response = await this.fetchWithTimeout(url, {
+          method: 'GET',
+          headers: this.getHeaders(),
+        });
+
+        if (response.status === 404) { lastError = `404 for queryId ${queryId}`; continue; }
+        if (!response.ok) {
+          const text = await response.text();
+          lastError = `HTTP ${response.status} (queryId ${queryId}): ${text.slice(0, 300)}`;
+          if (response.status === 400 || response.status === 422) continue;
+          return { success: false, users: [], error: lastError };
+        }
+
+        const data = await response.json() as any;
+        if (data.errors?.length > 0) {
+          lastError = data.errors.map((e: any) => e.message).join(', ');
+          if (data.errors.some((e: any) => e?.extensions?.code === 'GRAPHQL_VALIDATION_FAILED')) continue;
+          return { success: false, users: [], error: lastError };
+        }
+
+        const instructions = findInstructions(data);
+        const users = parseUsersFromInstructions(instructions);
+        const nextCursor = extractCursorFromInstructions(instructions);
+        return { success: true, users, nextCursor };
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : String(error);
+        continue;
+      }
+    }
+
+    const fallback = await this.getRestUserList(operationName, userId, count, cursor);
+    if (fallback.success) return fallback;
+    return { success: false, users: [], error: `${lastError || 'All query IDs failed'}; REST fallback: ${fallback.error || 'unknown error'}` };
+  }
+
+  private async getRestUserList(
+    operationName: 'Followers' | 'Following',
+    userId: string,
+    count = 50,
+    cursor?: string
+  ): Promise<UserListResult> {
+    const endpoint = operationName === 'Followers' ? 'followers/list.json' : 'friends/list.json';
+    const params = new URLSearchParams({
+      user_id: userId,
+      count: String(Math.min(count, 200)),
+      skip_status: 'true',
+      include_user_entities: 'false',
+    });
+    if (cursor) params.set('cursor', cursor);
+
+    const url = `https://api.twitter.com/1.1/${endpoint}?${params.toString()}`;
+    try {
+      const response = await this.fetchWithTimeout(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        return { success: false, users: [], error: `HTTP ${response.status}: ${text.slice(0, 300)}` };
+      }
+      const data = await response.json() as any;
+      const users = (data.users || []).map((user: any) => ({
+        id: user.id_str ?? user.id?.toString(),
+        username: user.screen_name,
+        name: user.name ?? user.screen_name,
+        description: user.description,
+        followersCount: user.followers_count,
+        followingCount: user.friends_count,
+        isBlueVerified: Boolean(user.is_blue_verified || user.verified),
+        profileImageUrl: user.profile_image_url_https,
+        createdAt: user.created_at,
+      })).filter((user: any) => user.id && user.username);
+      const nextCursor = data.next_cursor_str && data.next_cursor_str !== '0' ? data.next_cursor_str : undefined;
+      return { success: true, users, nextCursor };
+    } catch (error) {
+      return { success: false, users: [], error: error instanceof Error ? error.message : String(error) };
+    }
   }
 
   /**
@@ -292,6 +414,23 @@ export class XGraphQLClient {
     }
     return this.search(`@${user.user.username}`, count);
   }
+}
+
+function findInstructions(value: any): any[] {
+  if (!value || typeof value !== 'object') return [];
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findInstructions(item);
+      if (found.length > 0) return found;
+    }
+    return [];
+  }
+  if (Array.isArray(value.instructions)) return value.instructions;
+  for (const child of Object.values(value)) {
+    const found = findInstructions(child);
+    if (found.length > 0) return found;
+  }
+  return [];
 }
 
 /**

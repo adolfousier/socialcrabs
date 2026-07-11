@@ -1,0 +1,415 @@
+{
+  "source": "https://raw.githubusercontent.com/d60/twikit/main/ratelimits.md",
+  "window_minutes": 15,
+  "note": "Exact values parsed from d60/twikit ratelimits.md. Do not edit manually.",
+  "rows": [
+    {
+      "functions": "add_members_to_group",
+      "limit": null,
+      "endpoint": "AddParticipantsMutation",
+      "window_minutes": 15
+    },
+    {
+      "functions": "block_user",
+      "limit": 187,
+      "endpoint": "blocks/create.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_verified_followers",
+      "limit": 500,
+      "endpoint": "BlueVerifiedFollowers",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_bookmarks",
+      "limit": 500,
+      "endpoint": "Bookmarks",
+      "window_minutes": 15
+    },
+    {
+      "functions": "delete_all_bookmarks",
+      "limit": null,
+      "endpoint": "BookmarksAllDelete",
+      "window_minutes": 15
+    },
+    {
+      "functions": "change_group_name",
+      "limit": 900,
+      "endpoint": "{GroupID}/update_name.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_group_dm_history, get_dm_history",
+      "limit": 900,
+      "endpoint": "conversation/{ConversationID}.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "bookmark_tweet",
+      "limit": null,
+      "endpoint": "CreateBookmark",
+      "window_minutes": 15
+    },
+    {
+      "functions": "create_poll",
+      "limit": null,
+      "endpoint": "cards/create.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "follow_user",
+      "limit": 15,
+      "endpoint": "friendships/create.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "create_list",
+      "limit": null,
+      "endpoint": "CreateList",
+      "window_minutes": 15
+    },
+    {
+      "functions": "retweet",
+      "limit": null,
+      "endpoint": "CreateRetweet",
+      "window_minutes": 15
+    },
+    {
+      "functions": "create_scheduled_tweet",
+      "limit": null,
+      "endpoint": "CreateScheduledTweet",
+      "window_minutes": 15
+    },
+    {
+      "functions": "create_tweet",
+      "limit": null,
+      "endpoint": "CreateTweet",
+      "window_minutes": 15
+    },
+    {
+      "functions": "delete_bookmark",
+      "limit": null,
+      "endpoint": "DeleteBookmark",
+      "window_minutes": 15
+    },
+    {
+      "functions": "delete_dm",
+      "limit": null,
+      "endpoint": "DMMessageDeleteMutation",
+      "window_minutes": 15
+    },
+    {
+      "functions": "delete_list_banner",
+      "limit": null,
+      "endpoint": "DeleteListBanner",
+      "window_minutes": 15
+    },
+    {
+      "functions": "delete_retweet",
+      "limit": null,
+      "endpoint": "DeleteRetweet",
+      "window_minutes": 15
+    },
+    {
+      "functions": "delete_scheduled_tweet",
+      "limit": null,
+      "endpoint": "DeleteScheduledTweet",
+      "window_minutes": 15
+    },
+    {
+      "functions": "delete_tweet",
+      "limit": null,
+      "endpoint": "DeleteTweet",
+      "window_minutes": 15
+    },
+    {
+      "functions": "unfollow_user",
+      "limit": 187,
+      "endpoint": "friendships/destroy.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "edit_list_banner",
+      "limit": null,
+      "endpoint": "EditListBanner",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_favoriters",
+      "limit": 500,
+      "endpoint": "Favoriters",
+      "window_minutes": 15
+    },
+    {
+      "functions": "favorite_tweet",
+      "limit": null,
+      "endpoint": "FavoriteTweet",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_scheduled_tweets",
+      "limit": 500,
+      "endpoint": "FetchScheduledTweets",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_followers",
+      "limit": 50,
+      "endpoint": "Followers",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_followers_you_know",
+      "limit": 500,
+      "endpoint": "FollowersYouKnow",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_following",
+      "limit": 500,
+      "endpoint": "Following",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_guest_token",
+      "limit": null,
+      "endpoint": "guest/activate.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_latest_timeline",
+      "limit": 500,
+      "endpoint": "HomeLatestTimeline",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_timeline",
+      "limit": 500,
+      "endpoint": "HomeTimeline",
+      "window_minutes": 15
+    },
+    {
+      "functions": "-",
+      "limit": 450,
+      "endpoint": "dm/inbox_initial_state.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "add_list_member",
+      "limit": null,
+      "endpoint": "ListAddMember",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_list",
+      "limit": 500,
+      "endpoint": "ListByRestId",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_list_tweets",
+      "limit": 500,
+      "endpoint": "ListLatestTweetsTimeline",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_lists",
+      "limit": 500,
+      "endpoint": "ListsManagementPageTimeline",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_list_members",
+      "limit": 500,
+      "endpoint": "ListMembers",
+      "window_minutes": 15
+    },
+    {
+      "functions": "remove_list_member",
+      "limit": null,
+      "endpoint": "ListRemoveMember",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_list_subscribers",
+      "limit": 500,
+      "endpoint": "ListSubscribers",
+      "window_minutes": 15
+    },
+    {
+      "functions": "logout",
+      "limit": 187,
+      "endpoint": "account/logout.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "add_reaction_to_message",
+      "limit": null,
+      "endpoint": "/useDMReactionMutationAddMutation",
+      "window_minutes": 15
+    },
+    {
+      "functions": "remove_reaction_from_message",
+      "limit": null,
+      "endpoint": "useDMReactionMutationRemoveMutation",
+      "window_minutes": 15
+    },
+    {
+      "functions": "-",
+      "limit": null,
+      "endpoint": "MuteList",
+      "window_minutes": 15
+    },
+    {
+      "functions": "mute_user",
+      "limit": 187,
+      "endpoint": "mutes/users/create.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_notifications[type=\"All\"]",
+      "limit": 180,
+      "endpoint": "notifications/all.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_notifications[type=\"Mentions\"]",
+      "limit": 180,
+      "endpoint": "notifications/mentions.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_notifications[type=\"Verified\"]",
+      "limit": 180,
+      "endpoint": "notifications/verified.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_retweeters",
+      "limit": 500,
+      "endpoint": "Retweeters",
+      "window_minutes": 15
+    },
+    {
+      "functions": "search_tweet, search_user",
+      "limit": 50,
+      "endpoint": "SearchTimeline",
+      "window_minutes": 15
+    },
+    {
+      "functions": "send_dm",
+      "limit": 187,
+      "endpoint": "dm/new2.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "user_id",
+      "limit": null,
+      "endpoint": "account/settings.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_subscriptions",
+      "limit": 500,
+      "endpoint": "UserCreatorSubscriptions",
+      "window_minutes": 15
+    },
+    {
+      "functions": "login",
+      "limit": 187,
+      "endpoint": "onboarding/task.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_trends",
+      "limit": 20000,
+      "endpoint": "guide.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_tweet_by_id",
+      "limit": 150,
+      "endpoint": "TweetDetail",
+      "window_minutes": 15
+    },
+    {
+      "functions": "unblock_user",
+      "limit": 187,
+      "endpoint": "blocks/destroy.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "unfavorite_tweet",
+      "limit": null,
+      "endpoint": "UnfavoriteTweet",
+      "window_minutes": 15
+    },
+    {
+      "functions": "-",
+      "limit": null,
+      "endpoint": "UnmuteList",
+      "window_minutes": 15
+    },
+    {
+      "functions": "unmute_user",
+      "limit": 187,
+      "endpoint": "mutes/users/destroy.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "edit_list",
+      "limit": null,
+      "endpoint": "UpdateList",
+      "window_minutes": 15
+    },
+    {
+      "functions": "upload_media",
+      "limit": null,
+      "endpoint": "media/upload.json",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_by_id",
+      "limit": 500,
+      "endpoint": "UserByRestId",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_by_screen_name",
+      "limit": 95,
+      "endpoint": "UserByScreenName",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_tweets[tweet_type=\"Likes\"]",
+      "limit": 500,
+      "endpoint": "Likes",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_tweets[tweet_type=\"Media\"]",
+      "limit": 500,
+      "endpoint": "UserMedia",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_tweets[tweet_type=\"Tweets\"]",
+      "limit": 50,
+      "endpoint": "UserTweets",
+      "window_minutes": 15
+    },
+    {
+      "functions": "get_user_tweets[tweet_type=\"Replies\"]",
+      "limit": 50,
+      "endpoint": "UserTweetsAndReplies",
+      "window_minutes": 15
+    },
+    {
+      "functions": "vote",
+      "limit": null,
+      "endpoint": "capi/passthrough/1",
+      "window_minutes": 15
+    }
+  ]
+}

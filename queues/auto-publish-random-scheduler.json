@@ -1,0 +1,34 @@
+{
+  "enabled": true,
+  "minHours": 3,
+  "maxHours": 5,
+  "checkEveryMinutes": 30,
+  "nextRunAt": "2026-07-11T06:22:43.823Z",
+  "lastScheduledAt": "2026-07-11T05:33:43.823Z",
+  "lastDelayMinutes": 49,
+  "sources": "queues/source-users.json",
+  "accounts": "queues/accounts.example.json",
+  "autoPublishState": "queues/auto-publish-state.json",
+  "postsPerRun": "enabled_accounts",
+  "intervalHours": 3,
+  "mode": "each_enabled_account_every_3_to_5_hours",
+  "lastRunAt": "2026-07-10T18:13:51.395Z",
+  "lastPostedUrls": [],
+  "lastSquareLinks": [],
+  "lastAccounts": [],
+  "lastSourceUrls": [],
+  "lastCheckedAt": "2026-07-11T05:33:43.823Z",
+  "lastSquareStatuses": [
+    {
+      "account": "yoyo_aigo",
+      "success": true,
+      "link": "https://app.binance.com/uni-qr/cpos/343309616139585?r=BY8X0LH3&l=zh-CN"
+    },
+    {
+      "account": "blockheadchain_",
+      "success": true,
+      "link": "https://app.binance.com/uni-qr/cpos/343310385017633?r=E6MV7GZM&l=zh-CN"
+    }
+  ],
+  "lastSkippedReason": "No eligible hot tweets found in continuous window during dry-run."
+}

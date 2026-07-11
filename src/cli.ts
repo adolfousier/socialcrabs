@@ -1,13 +1,94 @@
 #!/usr/bin/env node
 
 import 'dotenv/config';
+import { execFileSync } from 'child_process';
 import { Command } from 'commander';
 import { SocialCrabs } from './index.js';
+import {
+  computeNextRunAt,
+  isSchedulerDue,
+  loadTweetSchedulerState,
+  saveTweetSchedulerState,
+} from './utils/tweet-scheduler.js';
+import {
+  postTweetWithXurl,
+} from './utils/xurl-poster.js';
+import {
+  loadTweetQueue,
+  markTweetItem,
+  saveTweetQueue,
+  selectPendingTweetItems,
+} from './utils/tweet-queue.js';
+import {
+  buildChineseTweetDrafts,
+  loadRankedSourceTweets,
+  saveTweetDraftQueue,
+} from './utils/tweet-drafts.js';
+import {
+  capLimitPerUser,
+  filterTweetsSince,
+  loadSourceScanState,
+  loadSourceUsers,
+  rankSourceTweets,
+  saveSourceScanState,
+  saveSourceTweets,
+} from './utils/source-scan.js';
+import {
+  appendActionLog,
+  previewAction,
+} from './utils/safety.js';
+import {
+  createApiTweetActionResult,
+  normalizeTweetPostingMethod,
+} from './utils/twitter-posting-policy.js';
+import {
+  buildTweetPipelinePlan,
+  saveTweetImageJobs,
+} from './utils/tweet-pipeline.js';
+import { createOpenTwitterClientFromEnv } from './opentwitter/index.js';
+import { extractTweetId } from './graphql/constants.js';
+import {
+  buildMultiAccountPosts,
+  buildOpenTwitterSourceSearchOptions,
+  loadMultiAccountConfig,
+  normalizeOpenTwitterTweets,
+  selectTextOnlyTweets,
+} from './utils/multi-account-pipeline.js';
+import {
+  advanceTargetAccountCursor,
+  buildAutoPublishHermesPrompt,
+  buildAutoPublishPlans,
+  buildImagePromptForTweet,
+  buildNextAutoPublishState,
+  buildPendingAutoPublishRun,
+  buildXurlAccountArgs,
+  cleanAutoPublishGeneratedText,
+  computeContinuousCollectionWindow,
+  defaultPendingAutoPublishRunPath,
+  deletePendingAutoPublishRun,
+  filterDueSourceUsers,
+  getPublishedSourceTweetIds,
+  loadAutoPublishState,
+  loadPendingAutoPublishRun,
+  markAutoPublishPlansPosted,
+  markSourceUsersProcessed,
+  saveAutoPublishState,
+  savePendingAutoPublishRun,
+  selectRotatingTargetAccounts,
+} from './utils/auto-publish.js';
+import {
+  postToBinanceSquare,
+} from './utils/binance-square.js';
+import {
+  buildXAutoPublishSuccessTelegramMessage,
+  sendTelegramSuccessNotification,
+} from './utils/socialcrabs-success-notifications.js';
 import type { Platform, ActionType, NotificationPayload } from './types/index.js';
 
 // Default retry configuration
 const DEFAULT_RETRIES = 3;
 const RETRY_DELAY_MS = 5000; // 5 seconds between retries
+const ACTION_LOG_PATH = process.env.ACTION_LOG_FILE || 'logs/actions.jsonl';
 
 /**
  * Parse --context JSON flag and merge with action result
@@ -91,6 +172,114 @@ async function sendNotificationWithContext(
   await notifier.notify(payload);
 }
 
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  const parsed = parseInt(value || '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function extractJsonObjectFromOutput(output: string): string {
+  const start = output.indexOf('{');
+  const end = output.lastIndexOf('}');
+  return start >= 0 && end >= start ? output.slice(start, end + 1) : output;
+}
+
+function extractIdFromXurlPostOutput(output: string): string | undefined {
+  try {
+    const parsed = JSON.parse(extractJsonObjectFromOutput(output)) as { data?: { id?: string } };
+    return parsed.data?.id;
+  } catch {
+    return undefined;
+  }
+}
+
+function autoPublishDebugEnabled(): boolean {
+  return /^(1|true|yes|on)$/i.test(process.env.SOCIALCRABS_AUTO_PUBLISH_DEBUG || '');
+}
+
+function truncateDebugValue(value: string, maxChars = 600): string {
+  const cleaned = value.replace(/\s+/g, ' ').trim();
+  return cleaned.length > maxChars ? `${cleaned.slice(0, maxChars - 1)}…` : cleaned;
+}
+
+function logAutoPublishRewriteDebug(input: {
+  account: string;
+  rawStdout?: string;
+  cleanedText?: string;
+  fallbackUsed: boolean;
+  reason?: string;
+}): void {
+  if (!autoPublishDebugEnabled()) return;
+  console.error(JSON.stringify({
+    event: 'auto-publish.rewrite',
+    account: input.account.replace(/^@/, ''),
+    fallbackUsed: input.fallbackUsed,
+    reason: input.reason,
+    rawStdout: input.rawStdout === undefined ? undefined : truncateDebugValue(input.rawStdout),
+    cleanedText: input.cleanedText === undefined ? undefined : truncateDebugValue(input.cleanedText),
+  }));
+}
+
+function generateAutoPublishTextWithHermes(input: {
+  sourceText: string;
+  draftText: string;
+  account: string;
+  style?: string;
+  maxChars: number;
+}): string {
+  const prompt = buildAutoPublishHermesPrompt(input);
+  try {
+    const output = execFileSync('hermes', ['--skills', 'humanizer-zh', '--toolsets', 'safe', '--oneshot', prompt], {
+      encoding: 'utf-8',
+      timeout: 120_000,
+      maxBuffer: 1024 * 1024,
+      env: {
+        ...process.env,
+        HERMES_SESSION_SOURCE: 'tool',
+      },
+    });
+    const cleanedText = cleanAutoPublishGeneratedText(output, input.maxChars, 60);
+    const fallbackUsed = cleanedText.length === 0;
+    logAutoPublishRewriteDebug({
+      account: input.account,
+      rawStdout: output,
+      cleanedText,
+      fallbackUsed,
+      reason: fallbackUsed ? 'empty-or-too-short-after-cleaning' : 'oneshot-ok',
+    });
+    return cleanedText || input.draftText;
+  } catch (error) {
+    logAutoPublishRewriteDebug({
+      account: input.account,
+      fallbackUsed: true,
+      reason: `oneshot-error:${error instanceof Error ? error.message : String(error)}`,
+    });
+    return input.draftText;
+  }
+}
+
+function boolOption(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+function printJson(data: unknown): void {
+  console.log(JSON.stringify(data, null, 2));
+}
+
+function printTweets(tweets: Array<{ id: string; text: string; author: { username: string; name?: string }; likeCount?: number; retweetCount?: number; replyCount?: number }>): void {
+  for (const tweet of tweets) {
+    console.log(`@${tweet.author.username}${tweet.author.name ? ` (${tweet.author.name})` : ''} · ${tweet.id}`);
+    console.log(tweet.text);
+    console.log(`❤️ ${tweet.likeCount ?? 0}  🔁 ${tweet.retweetCount ?? 0}  💬 ${tweet.replyCount ?? 0}`);
+    console.log('');
+  }
+}
+
+function disableTwitterBrowserAction(action: string): never {
+  console.error(`X browser action disabled: ${action}`);
+  console.error('SocialCrabs no longer opens X pages in Playwright. Use opentwitter/TWITTER_TOKEN for read-only collection and xurl/API for publishing.');
+  process.exit(1);
+}
+
 const program = new Command();
 
 program
@@ -150,6 +339,9 @@ session
   .option('-p, --password <password>', 'Password (or set PLATFORM_PASSWORD env)')
   .action(async (platform: Platform, options) => {
     try {
+      if (platform === 'twitter') {
+        disableTwitterBrowserAction('session login twitter');
+      }
       // Get credentials from options or environment
       const envPrefix = platform.toUpperCase();
       const username = options.username || process.env[`${envPrefix}_USERNAME`] || process.env[`${envPrefix}_EMAIL`];
@@ -198,33 +390,12 @@ session
 
 session
   .command('status')
-  .description('Check login status for all platforms')
+  .description('Check login status for non-X browser platforms; X uses opentwitter token')
   .action(async () => {
-    try {
-      const claw = new SocialCrabs({ browser: { headless: true } });
-      await claw.initialize();
-
-      const status = await claw.getStatus();
-
-      console.log('\n📊 Session Status\n');
-      console.log(`Browser: ${status.browser ? '✅ Running' : '❌ Not running'}`);
-      console.log(`Uptime: ${Math.floor(status.uptime)}s\n`);
-
-      for (const [platform, info] of Object.entries(status.platforms)) {
-        console.log(`${platform.charAt(0).toUpperCase() + platform.slice(1)}:`);
-        console.log(`  Logged in: ${info.loggedIn ? '✅' : '❌'}`);
-        console.log('  Rate limits:');
-        for (const [action, limit] of Object.entries(info.rateLimits)) {
-          console.log(`    ${action}: ${limit.remaining}/${limit.total} remaining`);
-        }
-        console.log();
-      }
-
-      await claw.shutdown();
-    } catch (error) {
-      console.error('Failed to get status:', error);
-      process.exit(1);
-    }
+    const hasToken = Boolean(process.env.TWITTER_TOKEN);
+    console.log('X/twitter browser status checks disabled.');
+    console.log(`opentwitter TWITTER_TOKEN: ${hasToken ? '✅ configured' : '❌ missing'}`);
+    console.log('Instagram/LinkedIn browser status checks are not run by this command anymore because the old aggregate status path initialized the X browser context too.');
   });
 
 session
@@ -232,6 +403,9 @@ session
   .description('Logout from a platform')
   .action(async (platform: Platform) => {
     try {
+      if (platform === 'twitter') {
+        disableTwitterBrowserAction('session logout twitter');
+      }
       const claw = new SocialCrabs({ browser: { headless: true } });
       await claw.initialize();
       await claw.logout(platform);
@@ -487,71 +661,78 @@ twitter
   .description('Like a tweet')
   .option('-c, --context <json>', 'JSON context for notification (language, behaviors, etc.)')
   .option('-r, --retries <number>', 'Number of retry attempts on failure', String(DEFAULT_RETRIES))
-  .action(async (url: string, options: { context?: string; retries?: string }) => {
-    const retries = parseRetries(options.retries);
-    const context = parseContext(options.context);
-    if (context) process.env.SOCIALCRABS_SILENT = '1';
-    
-    const claw = new SocialCrabs({ browser: { headless: true } });
-    
-    try {
-      await claw.initialize();
-
-      await withRetry(
-        async () => {
-          const res = await claw.twitter.like({ url });
-          if (!res.success) throw new Error(res.error || 'Like failed');
-          return res;
-        },
-        { retries, actionName: 'X like', target: url }
-      );
-
-      console.log(`✅ Liked tweet: ${url}`);
-      
-      if (context) {
-        await sendNotificationWithContext(
-          claw, 'twitter', 'like', true, url,
-          { postUrl: url, ...context }
-        );
-      }
-
-      await claw.shutdown();
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.log(`❌ Failed to like after ${retries} attempts: ${errorMsg}`);
-      
-      if (context) {
-        await sendNotificationWithContext(
-          claw, 'twitter', 'like', false, url, context, errorMsg
-        );
-      }
-      
-      await claw.shutdown();
-      process.exit(1);
-    }
+  .action(async (url: string) => {
+    void url;
+    disableTwitterBrowserAction('like');
   });
 
 twitter
   .command('tweet <text>')
-  .description('Post a tweet')
-  .action(async (text: string) => {
+  .description('Post a tweet via X API/xurl only')
+  .option('--dry-run', 'Preview the tweet without posting')
+  .option('--confirm', 'Ask for confirmation before posting')
+  .action(async (text: string, options: { dryRun?: boolean; confirm?: boolean }) => {
     try {
-      const claw = new SocialCrabs({ browser: { headless: true } });
-      await claw.initialize();
+      const summary = `About to post tweet via X API/xurl:\n\n${text}`;
+      const preview = await previewAction({
+        dryRun: options.dryRun,
+        confirm: options.confirm,
+        summary,
+        run: async () => {
+          const startedAt = Date.now();
+          const apiResult = postTweetWithXurl(text);
+          return createApiTweetActionResult(text, apiResult, startedAt);
+        },
+      });
 
-      const result = await claw.twitter.post({ text });
+      if (!preview.executed) {
+        console.log(preview.message);
+        appendActionLog(ACTION_LOG_PATH, {
+          platform: 'twitter',
+          action: 'tweet',
+          text,
+          method: 'api',
+          status: preview.cancelled ? 'cancelled' : 'dry-run',
+        });
+        return;
+      }
 
+      const result = preview.value!;
       if (result.success) {
-        console.log(`✅ Posted tweet`);
+        console.log(`✅ Posted tweet via API`);
         if (result.data?.postUrl) {
           console.log(`🔗 ${result.data.postUrl}`);
         }
+        appendActionLog(ACTION_LOG_PATH, {
+          platform: 'twitter',
+          action: 'tweet',
+          text,
+          method: 'api',
+          status: 'success',
+          url: result.data?.postUrl as string | undefined,
+        });
       } else {
-        console.log(`❌ Failed to post: ${result.error}`);
+        console.log(`❌ Failed to post via API: ${result.error}`);
+        appendActionLog(ACTION_LOG_PATH, {
+          platform: 'twitter',
+          action: 'tweet',
+          text,
+          method: 'api',
+          status: 'error',
+          error: result.error,
+        });
+        process.exitCode = 1;
       }
-
-      await claw.shutdown();
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      appendActionLog(ACTION_LOG_PATH, {
+        platform: 'twitter',
+        action: 'tweet',
+        text,
+        method: 'api',
+        status: 'error',
+        error: errorMsg,
+      });
       console.error('Error:', error);
       process.exit(1);
     }
@@ -562,111 +743,51 @@ twitter
   .description('Follow a Twitter user')
   .option('-c, --context <json>', 'JSON context for notification')
   .option('-r, --retries <number>', 'Number of retry attempts on failure', String(DEFAULT_RETRIES))
-  .action(async (usernameOrUrl: string, options: { context?: string; retries?: string }) => {
-    const retries = parseRetries(options.retries);
-    const context = parseContext(options.context);
-    if (context) process.env.SOCIALCRABS_SILENT = '1';
-    
-    // Extract username from URL if needed
-    let username = usernameOrUrl;
-    if (usernameOrUrl.includes('x.com/') || usernameOrUrl.includes('twitter.com/')) {
-      const match = usernameOrUrl.match(/(?:x\.com|twitter\.com)\/(@?[\w]+)/);
-      if (match) {
-        username = match[1].replace('@', '');
-      }
-    }
-    username = username.replace(/^@/, '');
-    
-    const claw = new SocialCrabs({ browser: { headless: true } });
-    
-    try {
-      await claw.initialize();
-
-      await withRetry(
-        async () => {
-          const res = await claw.twitter.follow({ username });
-          if (!res.success) throw new Error(res.error || 'Follow failed');
-          return res;
-        },
-        { retries, actionName: 'X follow', target: `@${username}` }
-      );
-
-      console.log(`✅ Followed: @${username}`);
-      
-      if (context) {
-        await sendNotificationWithContext(
-          claw, 'twitter', 'follow', true, username,
-          { profileUrl: `https://x.com/${username}`, ...context }
-        );
-      }
-
-      await claw.shutdown();
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.log(`❌ Failed to follow @${username} after ${retries} attempts: ${errorMsg}`);
-      
-      if (context) {
-        await sendNotificationWithContext(
-          claw, 'twitter', 'follow', false, username, context, errorMsg
-        );
-      }
-      
-      await claw.shutdown();
-      process.exit(1);
-    }
+  .option('--dry-run', 'Preview the follow without clicking')
+  .option('--confirm', 'Ask for confirmation before following')
+  .action(async (usernameOrUrl: string) => {
+    void usernameOrUrl;
+    disableTwitterBrowserAction('follow');
   });
 
 twitter
+  .command('follow-queue <file>')
+  .description('Follow pending users from a JSON queue')
+  .option('-l, --limit <number>', 'Maximum users to follow in this run', '1')
+  .option('-r, --retries <number>', 'Number of retry attempts per user', String(DEFAULT_RETRIES))
+  .option('--delay-seconds <number>', 'Delay between successful follows', '120')
+  .option('--dry-run', 'Preview queued follows without clicking')
+  .option('--confirm', 'Ask for confirmation before running the queue')
+  .action(async (file: string) => {
+    void file;
+    disableTwitterBrowserAction('follow-queue');
+  });
+
+ twitter
   .command('reply <url> <text>')
   .description('Reply to a tweet')
   .option('-c, --context <json>', 'JSON context for notification')
-  .action(async (url: string, text: string, options: { context?: string }) => {
-    try {
-      const context = parseContext(options.context);
-      if (context) process.env.SOCIALCRABS_SILENT = '1';
-      
-      const claw = new SocialCrabs({ browser: { headless: true } });
-      await claw.initialize();
-
-      const result = await claw.twitter.comment({ url, text });
-
-      if (result.success) {
-        console.log(`✅ Replied to tweet`);
-      } else {
-        console.log(`❌ Failed to reply: ${result.error}`);
-      }
-      
-      if (context) {
-        await sendNotificationWithContext(
-          claw, 'twitter', 'comment', result.success, url,
-          { postUrl: url, commentText: text, actions: ['💬 Replied'], ...context },
-          result.error
-        );
-      }
-
-      await claw.shutdown();
-    } catch (error) {
-      console.error('Error:', error);
-      process.exit(1);
-    }
+  .action(async (url: string, text: string) => {
+    void url;
+    void text;
+    disableTwitterBrowserAction('reply');
   });
 
 // X DM removed - encrypted DMs require passcode that can't be automated
 
 // ============================================================================
-// X GraphQL Read Commands (replaces bird CLI dependency)
+// X Read Commands via opentwitter / 6551 API (no browser, no x.com GraphQL cookies)
 // ============================================================================
 
 twitter
   .command('search <query>')
-  .description('Search tweets via GraphQL API (cookie auth)')
+  .description('Search tweets via opentwitter / 6551 API')
   .option('-n, --count <number>', 'Number of tweets', '20')
   .option('--json', 'Output raw JSON')
   .action(async (query: string, options: { count?: string; json?: boolean }) => {
-    const { createClientFromEnv } = await import('./graphql/index.js');
     try {
-      const client = createClientFromEnv();
-      const result = await client.search(query, parseInt(options.count || '20', 10));
+      const client = createOpenTwitterClientFromEnv();
+      const result = await client.search({ keywords: query, maxResults: parseInt(options.count || '20', 10), product: 'Top' });
       if (!result.success) { console.error('Error:', result.error); process.exit(1); }
       if (options.json) { console.log(JSON.stringify(result.tweets, null, 2)); return; }
       if (result.tweets.length === 0) { console.log('No tweets found.'); return; }
@@ -677,42 +798,32 @@ twitter
         console.log(`https://x.com/${tweet.author.username}/status/${tweet.id}`);
         console.log('---');
       }
-      console.log(`\n${result.tweets.length} tweets found.`);
+      console.log(`\n${result.tweets.length} tweets found via opentwitter.`);
     } catch (e: any) { console.error('Error:', e.message); process.exit(1); }
   });
 
 twitter
   .command('home')
-  .description('Get home timeline via GraphQL API')
-  .option('-n, --count <number>', 'Number of tweets', '8')
-  .option('--json', 'Output raw JSON')
-  .action(async (options: { count?: string; json?: boolean }) => {
-    const { createClientFromEnv } = await import('./graphql/index.js');
-    try {
-      const client = createClientFromEnv();
-      const result = await client.getHomeTimeline(parseInt(options.count || '8', 10));
-      if (!result.success) { console.error('Error:', result.error); process.exit(1); }
-      if (options.json) { console.log(JSON.stringify(result.tweets, null, 2)); return; }
-      for (const tweet of result.tweets) {
-        console.log(`\n@${tweet.author.username} (${tweet.author.name})`);
-        console.log(tweet.text);
-        console.log(`❤️ ${tweet.likeCount ?? 0}  🔁 ${tweet.retweetCount ?? 0}  💬 ${tweet.replyCount ?? 0}`);
-        console.log(`https://x.com/${tweet.author.username}/status/${tweet.id}`);
-        console.log('---');
-      }
-    } catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  .description('Disabled: opentwitter does not expose a home timeline endpoint')
+  .option('-n, --count <number>', 'Ignored')
+  .option('--json', 'Ignored')
+  .action(async () => {
+    console.error('X home timeline disabled: it required authenticated x.com GraphQL/cookie access. Use `socialcrabs twitter search` or `source-scan` via opentwitter instead.');
+    process.exit(1);
   });
 
 twitter
   .command('mentions')
-  .description('Get mentions for authenticated user')
+  .description('Search tweets mentioning a user via opentwitter')
+  .option('-u, --username <username>', 'Username to search mentions for')
   .option('-n, --count <number>', 'Number of tweets', '5')
   .option('--json', 'Output raw JSON')
-  .action(async (options: { count?: string; json?: boolean }) => {
-    const { createClientFromEnv } = await import('./graphql/index.js');
+  .action(async (options: { username?: string; count?: string; json?: boolean }) => {
     try {
-      const client = createClientFromEnv();
-      const result = await client.getMentions(parseInt(options.count || '5', 10));
+      const username = options.username || process.env.SOCIALCRABS_TWITTER_USERNAME || process.env.TWITTER_USERNAME;
+      if (!username) { console.error('Error: --username or TWITTER_USERNAME is required for opentwitter mentions.'); process.exit(1); }
+      const client = createOpenTwitterClientFromEnv();
+      const result = await client.search({ mentionUser: username, maxResults: parseInt(options.count || '5', 10), product: 'Latest' });
       if (!result.success) { console.error('Error:', result.error); process.exit(1); }
       if (options.json) { console.log(JSON.stringify(result.tweets, null, 2)); return; }
       if (result.tweets.length === 0) { console.log('No mentions found.'); return; }
@@ -725,28 +836,1025 @@ twitter
   });
 
 twitter
-  .command('whoami')
-  .description('Show authenticated X account')
-  .action(async () => {
-    const { createClientFromEnv } = await import('./graphql/index.js');
+  .command('tweet-queue <file>')
+  .description('Post pending tweets from a JSON queue via X API/xurl; supports imagePath media')
+  .option('-l, --limit <number>', 'Maximum tweets to post in this run', '1')
+  .option('--delay-seconds <number>', 'Delay between successful tweets', '120')
+  .option('--dry-run', 'Preview queued tweets without posting')
+  .option('--confirm', 'Ask for confirmation before posting')
+  .option('--method <method>', 'Posting method: api only', 'api')
+  .action(async (file: string, options: { limit?: string; delaySeconds?: string; dryRun?: boolean; confirm?: boolean; method?: string }) => {
+    const fs = await import('fs');
+    const limit = Math.max(1, parseInt(options.limit || '1', 10) || 1);
+    const delaySeconds = Math.max(0, parseInt(options.delaySeconds || '120', 10) || 0);
     try {
-      const client = createClientFromEnv();
-      const result = await client.getCurrentUser();
-      if (!result.success) { console.error('Error:', result.error); process.exit(1); }
-      console.log(`@${result.user!.username} (${result.user!.name}) [id: ${result.user!.id}]`);
+      const method = normalizeTweetPostingMethod(options.method);
+      const queue = loadTweetQueue(file);
+      let items = queue.items;
+      const selected = selectPendingTweetItems(items, limit);
+
+      if (selected.length === 0) {
+        console.log('No pending tweets in queue.');
+        return;
+      }
+
+      const summary = [
+        `About to post ${selected.length} queued tweet(s):`,
+        ...selected.map((item, index) => {
+          const image = item.imagePath ? ` [image: ${item.imagePath}]` : '';
+          return `${index + 1}. ${item.text.slice(0, 120).replace(/\s+/g, ' ')}${image}`;
+        }),
+        `Queue: ${file}`,
+        `Method: ${method}`,
+        `Delay between tweets: ${delaySeconds}s`,
+      ].join('\n');
+
+      const preview = await previewAction({
+        dryRun: options.dryRun,
+        confirm: options.confirm,
+        summary,
+        run: async () => true,
+      });
+
+      if (!preview.executed) {
+        console.log(preview.message);
+        for (const item of selected) {
+          appendActionLog(ACTION_LOG_PATH, {
+            platform: 'twitter',
+            action: 'tweet-queue',
+            target: item.id,
+            text: item.text,
+            status: preview.cancelled ? 'cancelled' : 'dry-run',
+            queue: file,
+            imagePath: item.imagePath,
+          });
+        }
+        return;
+      }
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (let i = 0; i < selected.length; i++) {
+        const item = selected[i];
+        console.log(`\n[${i + 1}/${selected.length}] Posting queued tweet ${item.id}...`);
+
+        try {
+          const media = item.imagePath && fs.existsSync(item.imagePath) ? [item.imagePath] : undefined;
+          if (item.imagePath && !media) {
+            console.log(`⚠️  Image path not found, posting text only: ${item.imagePath}`);
+          }
+          const res = postTweetWithXurl(item.text, media || []);
+          if (!res.success) throw new Error(res.error || 'xurl post failed');
+          const postedUrl = res.postedUrl;
+
+          successCount += 1;
+          items = markTweetItem(items, item.id, 'posted', { postedUrl });
+          saveTweetQueue(file, items);
+          appendActionLog(ACTION_LOG_PATH, {
+            platform: 'twitter',
+            action: 'tweet-queue',
+            target: item.id,
+            text: item.text,
+            status: 'success',
+            url: postedUrl,
+            queue: file,
+            imagePath: item.imagePath,
+          });
+          console.log(`✅ Posted queued tweet ${item.id}`);
+          if (postedUrl) console.log(`🔗 ${postedUrl}`);
+
+          if (i < selected.length - 1 && delaySeconds > 0) {
+            console.log(`Waiting ${delaySeconds}s before next tweet...`);
+            await new Promise((resolve) => setTimeout(resolve, delaySeconds * 1000));
+          }
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          errorCount += 1;
+          items = markTweetItem(items, item.id, 'error', { error: errorMsg });
+          saveTweetQueue(file, items);
+          appendActionLog(ACTION_LOG_PATH, {
+            platform: 'twitter',
+            action: 'tweet-queue',
+            target: item.id,
+            text: item.text,
+            status: 'error',
+            error: errorMsg,
+            queue: file,
+            imagePath: item.imagePath,
+          });
+          console.log(`❌ Failed ${item.id}: ${errorMsg}`);
+        }
+      }
+
+      console.log(`\nDone. Posted: ${successCount}, errors: ${errorCount}`);
+      if (errorCount > 0) process.exitCode = 1;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      appendActionLog(ACTION_LOG_PATH, {
+        platform: 'twitter',
+        action: 'tweet-queue',
+        target: file,
+        status: 'error',
+        error: errorMsg,
+      });
+      console.error('Error:', errorMsg);
+      process.exit(1);
+    }
+  });
+
+twitter
+  .command('tweet-scheduler')
+  .description('Run one scheduler tick: post one pending tweet via API only when due')
+  .option('--queue <file>', 'Tweet queue JSON file', 'queues/tweets.json')
+  .option('--state <file>', 'Scheduler state JSON file', 'state/tweet-scheduler.json')
+  .option('--min-hours <number>', 'Minimum hours before next run', '6')
+  .option('--max-hours <number>', 'Maximum hours before next run', '8')
+  .option('--run-now', 'Ignore nextRunAt and run immediately if a pending tweet exists')
+  .option('--dry-run', 'Show scheduler decision without posting or mutating files')
+  .action(async (options: { queue?: string; state?: string; minHours?: string; maxHours?: string; runNow?: boolean; dryRun?: boolean }) => {
+    const fs = await import('fs');
+    const queuePath = options.queue || 'queues/tweets.json';
+    const statePath = options.state || 'state/tweet-scheduler.json';
+    const minHours = Math.max(0.1, parseFloat(options.minHours || '6') || 6);
+    const maxHours = Math.max(minHours, parseFloat(options.maxHours || '8') || 8);
+    const now = new Date();
+    const state = loadTweetSchedulerState(statePath);
+
+    if (!state.nextRunAt && !options.runNow) {
+      const nextRunAt = computeNextRunAt(now, minHours, maxHours).toISOString();
+      const nextState = { ...state, nextRunAt, minHours, maxHours, lastStatus: 'initialized' };
+      console.log(`Scheduler initialized. Next run: ${nextRunAt}`);
+      if (!options.dryRun) saveTweetSchedulerState(statePath, nextState);
+      return;
+    }
+
+    const due = options.runNow || isSchedulerDue(state, now);
+    if (!due) {
+      console.log(`Not due. Next run: ${state.nextRunAt}`);
+      return;
+    }
+
+    const queue = loadTweetQueue(queuePath);
+    const [item] = selectPendingTweetItems(queue.items, 1);
+    if (!item) {
+      const nextRunAt = computeNextRunAt(now, minHours, maxHours).toISOString();
+      const nextState = { ...state, nextRunAt, minHours, maxHours, lastRunAt: now.toISOString(), lastStatus: 'no_pending_tweets' };
+      console.log(`Due, but no pending tweets. Next run: ${nextRunAt}`);
+      if (!options.dryRun) saveTweetSchedulerState(statePath, nextState);
+      return;
+    }
+
+    const media = item.imagePath && fs.existsSync(item.imagePath) ? [item.imagePath] : [];
+    console.log(`Due. Will post queued tweet ${item.id} via API.`);
+    console.log(item.text);
+    if (media.length > 0) console.log(`Image: ${media[0]}`);
+
+    if (options.dryRun) {
+      console.log('DRY RUN: no API call, no queue/state mutation.');
+      return;
+    }
+
+    const result = postTweetWithXurl(item.text, media);
+    const items = result.success
+      ? markTweetItem(queue.items, item.id, 'posted', { postedUrl: result.postedUrl })
+      : markTweetItem(queue.items, item.id, 'error', { error: result.error || 'xurl post failed' });
+    saveTweetQueue(queuePath, items);
+
+    const nextRunAt = computeNextRunAt(now, minHours, maxHours).toISOString();
+    saveTweetSchedulerState(statePath, {
+      ...state,
+      nextRunAt,
+      minHours,
+      maxHours,
+      lastRunAt: now.toISOString(),
+      lastStatus: result.success ? 'posted' : 'error',
+      lastMessage: result.success ? result.postedUrl : result.error,
+    });
+
+    appendActionLog(ACTION_LOG_PATH, {
+      platform: 'twitter',
+      action: 'tweet-scheduler',
+      target: item.id,
+      status: result.success ? 'success' : 'error',
+      url: result.postedUrl,
+      error: result.error,
+      nextRunAt,
+    });
+
+    if (!result.success) {
+      console.error(`Scheduler post failed: ${result.error}`);
+      process.exit(1);
+    }
+
+    console.log(`Posted ${item.id}: ${result.postedUrl}`);
+    console.log(`Next run: ${nextRunAt}`);
+  });
+
+ twitter
+  .command('draft-tweets <sourceFile>')
+  .description('Generate Chinese tweet drafts from ranked source tweets; no posting')
+  .option('-o, --output <file>', 'Output tweet draft queue JSON file', 'queues/tweets.json')
+  .option('-c, --count <number>', 'Number of drafts to generate', '3')
+  .option('--dry-run', 'Preview drafts without writing output')
+  .action(async (sourceFile: string, options: { output?: string; count?: string; dryRun?: boolean }) => {
+    try {
+      const count = parsePositiveInt(options.count, 3);
+      const sourceTweets = loadRankedSourceTweets(sourceFile);
+      const drafts = buildChineseTweetDrafts(sourceTweets, count);
+
+      if (drafts.length === 0) {
+        console.log('No new source tweets available for drafting.');
+        return;
+      }
+
+      console.log(`Generated ${drafts.length} Chinese draft(s):`);
+      for (const draft of drafts) {
+        console.log(`\n[${draft.id}] from @${draft.sourceUser}`);
+        console.log(draft.text);
+        console.log(`imageProvider: ${draft.imageProvider}`);
+        console.log(`source: ${draft.sourceUrl}`);
+      }
+
+      appendActionLog(ACTION_LOG_PATH, {
+        platform: 'twitter',
+        action: 'draft-tweets',
+        target: options.output || 'queues/tweets.json',
+        status: options.dryRun ? 'dry-run' : 'success',
+        drafts: drafts.length,
+      });
+
+      if (options.dryRun) {
+        console.log('\nDRY RUN: no tweet draft file written.');
+        return;
+      }
+
+      const output = options.output || 'queues/tweets.json';
+      saveTweetDraftQueue(output, drafts);
+      console.log(`\nSaved ${drafts.length} draft tweet(s) to ${output}`);
+    } catch (e: any) {
+      console.error('Error:', e.message);
+      appendActionLog(ACTION_LOG_PATH, {
+        platform: 'twitter',
+        action: 'draft-tweets',
+        target: sourceFile,
+        status: 'error',
+        error: e.message,
+      });
+      process.exit(1);
+    }
+  });
+
+ twitter
+  .command('source-scan <file>')
+  .description('Read source users, rank their recent tweets, and write source-tweets.json')
+  .option('-o, --output <file>', 'Output ranked source tweets JSON file', 'queues/source-tweets.json')
+  .option('--state <file>', 'Per-user scan state file', 'state/source-scan-state.json')
+  .option('--limit-per-user <number>', 'Tweets to read per source user, capped at 10', '10')
+  .option('--dry-run', 'Preview ranked source tweets without writing output or updating state')
+  .option('--json', 'Print ranked source tweets as JSON')
+  .action(async (file: string, options: { output?: string; state?: string; limitPerUser?: string; dryRun?: boolean; json?: boolean }) => {
+    try {
+      const users = loadSourceUsers(file);
+      if (users.length === 0) {
+        console.log('No enabled source users found.');
+        return;
+      }
+
+      const client = createOpenTwitterClientFromEnv();
+      const limitPerUser = capLimitPerUser(options.limitPerUser);
+      const statePath = options.state || 'state/source-scan-state.json';
+      const scanState = loadSourceScanState(statePath);
+      const scanStartedAt = new Date().toISOString();
+      const batches = [];
+
+      console.log(`Scanning ${users.length} source user(s), up to ${limitPerUser} tweets each...`);
+      for (const user of users) {
+        const result = await client.getUserTweets(user.username, limitPerUser, 'Latest');
+        if (!result.success) {
+          console.log(`⚠️  @${user.username}: ${result.error}`);
+          appendActionLog(ACTION_LOG_PATH, {
+            platform: 'twitter',
+            action: 'source-scan',
+            target: `@${user.username}`,
+            status: 'error',
+            error: result.error,
+          });
+          continue;
+        }
+        const lastScannedAt = scanState.users[user.username]?.lastScannedAt;
+        const newTweets = filterTweetsSince(result.tweets, lastScannedAt);
+        batches.push({ sourceUser: user.username, weight: user.weight, tweets: newTweets });
+        console.log(`@${user.username}: read ${result.tweets.length} tweet(s), kept ${newTweets.length} new tweet(s)${lastScannedAt ? ` since ${lastScannedAt}` : ' (first scan)'}`);
+        if (!options.dryRun) {
+          scanState.users[user.username] = { lastScannedAt: scanStartedAt };
+        }
+      }
+
+      const ranked = rankSourceTweets(batches);
+
+      if (options.json) {
+        console.log(JSON.stringify(ranked, null, 2));
+      } else {
+        console.log(`Ranked usable source tweets: ${ranked.length}`);
+        for (const tweet of ranked.slice(0, 20)) {
+          console.log(`  score=${tweet.score} @${tweet.sourceUser}: ${tweet.text.slice(0, 100).replace(/\s+/g, ' ')}`);
+          console.log(`    ${tweet.sourceTweetUrl}`);
+        }
+        if (ranked.length > 20) console.log(`  ...and ${ranked.length - 20} more`);
+      }
+
+      appendActionLog(ACTION_LOG_PATH, {
+        platform: 'twitter',
+        action: 'source-scan',
+        target: options.output || 'queues/source-tweets.json',
+        status: options.dryRun ? 'dry-run' : 'success',
+        sources: users.length,
+        rankedTweets: ranked.length,
+      });
+
+      if (options.dryRun) {
+        console.log('DRY RUN: no source tweet file written.');
+        return;
+      }
+
+      const output = options.output || 'queues/source-tweets.json';
+      saveSourceTweets(output, ranked);
+      saveSourceScanState(statePath, scanState);
+      console.log(`Saved ${ranked.length} ranked source tweet(s) to ${output}`);
+      console.log(`Updated source scan state: ${statePath}`);
+    } catch (e: any) {
+      console.error('Error:', e.message);
+      appendActionLog(ACTION_LOG_PATH, {
+        platform: 'twitter',
+        action: 'source-scan',
+        target: file,
+        status: 'error',
+        error: e.message,
+      });
+      process.exit(1);
+    }
+  });
+
+ twitter
+  .command('pipeline <sourceUsersFile>')
+  .description('Run source scan → Chinese draft generation → image job queue → tweet queue; no posting')
+  .option('--source-output <file>', 'Ranked source tweets JSON file', 'queues/source-tweets.json')
+  .option('--tweet-queue <file>', 'Tweet queue JSON file', 'queues/tweets.json')
+  .option('--image-jobs <file>', 'Image generation jobs JSON file', 'queues/image-jobs.json')
+  .option('--state <file>', 'Per-user source scan state file', 'state/source-scan-state.json')
+  .option('--limit-per-user <number>', 'Tweets to read per source user, capped at 10', '10')
+  .option('-c, --count <number>', 'Number of new tweet drafts to create', '3')
+  .option('--dry-run', 'Preview pipeline results without writing files')
+  .option('--json', 'Print pipeline summary as JSON')
+  .action(async (sourceUsersFile: string, options: { sourceOutput?: string; tweetQueue?: string; imageJobs?: string; state?: string; limitPerUser?: string; count?: string; dryRun?: boolean; json?: boolean }) => {
+    try {
+      const users = loadSourceUsers(sourceUsersFile);
+      if (users.length === 0) {
+        console.log('No enabled source users found.');
+        return;
+      }
+
+      const sourceOutput = options.sourceOutput || 'queues/source-tweets.json';
+      const tweetQueuePath = options.tweetQueue || 'queues/tweets.json';
+      const imageJobsPath = options.imageJobs || 'queues/image-jobs.json';
+      const statePath = options.state || 'state/source-scan-state.json';
+      const limitPerUser = capLimitPerUser(options.limitPerUser);
+      const draftCount = parsePositiveInt(options.count, 3);
+      const scanState = loadSourceScanState(statePath);
+      const scanStartedAt = new Date().toISOString();
+      const client = createOpenTwitterClientFromEnv();
+      const batches = [];
+
+      console.log(`Pipeline scanning ${users.length} source user(s), up to ${limitPerUser} tweets each...`);
+      for (const user of users) {
+        const result = await client.getUserTweets(user.username, limitPerUser, 'Latest');
+        if (!result.success) {
+          console.log(`⚠️  @${user.username}: ${result.error}`);
+          appendActionLog(ACTION_LOG_PATH, {
+            platform: 'twitter',
+            action: 'pipeline',
+            target: `@${user.username}`,
+            status: 'error',
+            error: result.error,
+          });
+          continue;
+        }
+        const lastScannedAt = scanState.users[user.username]?.lastScannedAt;
+        const newTweets = filterTweetsSince(result.tweets, lastScannedAt);
+        batches.push({ sourceUser: user.username, weight: user.weight, tweets: newTweets });
+        console.log(`@${user.username}: read ${result.tweets.length}, kept ${newTweets.length}${lastScannedAt ? ` since ${lastScannedAt}` : ' (first scan)'}`);
+        if (!options.dryRun) {
+          scanState.users[user.username] = { lastScannedAt: scanStartedAt };
+        }
+      }
+
+      const ranked = rankSourceTweets(batches);
+      const existingQueue = loadTweetQueue(tweetQueuePath).items;
+      const plan = buildTweetPipelinePlan({
+        sourceTweets: ranked,
+        existingQueue,
+        draftCount,
+      });
+
+      const summary = {
+        sources: users.length,
+        rankedTweets: ranked.length,
+        draftsCreated: plan.drafts.length,
+        imageJobsCreated: plan.imageJobs.length,
+        nextQueueSize: plan.nextQueue.length,
+        sourceOutput,
+        tweetQueue: tweetQueuePath,
+        imageJobs: imageJobsPath,
+        state: statePath,
+        dryRun: Boolean(options.dryRun),
+      };
+
+      if (options.json) {
+        console.log(JSON.stringify({ summary, drafts: plan.drafts, imageJobs: plan.imageJobs }, null, 2));
+      } else {
+        console.log(`Ranked usable source tweets: ${ranked.length}`);
+        console.log(`New drafts: ${plan.drafts.length}`);
+        for (const draft of plan.drafts) {
+          console.log(`\n[${draft.id}] from @${draft.sourceUser} score=${draft.sourceScore ?? 0}`);
+          console.log(draft.text);
+          console.log(`image job: ${draft.imageProvider}`);
+          console.log(`source: ${draft.sourceUrl}`);
+        }
+      }
+
+      appendActionLog(ACTION_LOG_PATH, {
+        platform: 'twitter',
+        action: 'pipeline',
+        target: sourceUsersFile,
+        status: options.dryRun ? 'dry-run' : 'success',
+        ...summary,
+      });
+
+      if (options.dryRun) {
+        console.log('\nDRY RUN: no source/queue/image/state files written and no tweet posted.');
+        return;
+      }
+
+      saveSourceTweets(sourceOutput, plan.nextSources);
+      saveTweetQueue(tweetQueuePath, plan.nextQueue);
+      saveTweetImageJobs(imageJobsPath, plan.imageJobs);
+      saveSourceScanState(statePath, scanState);
+      console.log(`\nSaved ranked sources: ${sourceOutput}`);
+      console.log(`Saved tweet queue: ${tweetQueuePath}`);
+      console.log(`Saved image jobs: ${imageJobsPath}`);
+      console.log(`Updated scan state: ${statePath}`);
+      console.log('No tweet was posted. Use tweet-scheduler or tweet-queue when you are ready to publish via API.');
+    } catch (e: any) {
+      console.error('Error:', e.message);
+      appendActionLog(ACTION_LOG_PATH, {
+        platform: 'twitter',
+        action: 'pipeline',
+        target: sourceUsersFile,
+        status: 'error',
+        error: e.message,
+      });
+      process.exit(1);
+    }
+  });
+
+twitter
+  .command('user <username>')
+  .description('Get Twitter/X user profile via opentwitter')
+  .option('--json', 'Output raw JSON')
+  .action(async (username: string, options: { json?: boolean }) => {
+    try {
+      const result = await createOpenTwitterClientFromEnv().getUserInfo(username);
+      if (!result.success) throw new Error(result.error || 'opentwitter user lookup failed');
+      if (options.json) { printJson(result.user); return; }
+      console.log(`@${result.user!.username} (${result.user!.name})`);
+      console.log(`id: ${result.user!.id}`);
     } catch (e: any) { console.error('Error:', e.message); process.exit(1); }
   });
 
 twitter
+  .command('user-id <userId>')
+  .description('Get Twitter/X user profile by numeric ID via opentwitter')
+  .option('--json', 'Output raw JSON')
+  .action(async (userId: string, options: { json?: boolean }) => {
+    try {
+      const result = await createOpenTwitterClientFromEnv().getUserById(userId);
+      if (!result.success) throw new Error(result.error || 'opentwitter user-id lookup failed');
+      if (options.json) { printJson(result.user); return; }
+      console.log(`@${result.user!.username} (${result.user!.name})`);
+      console.log(`id: ${result.user!.id}`);
+    } catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+twitter
+  .command('user-tweets <username>')
+  .description('Get recent tweets from a user via opentwitter')
+  .option('-n, --count <number>', 'Number of tweets', '20')
+  .option('--product <product>', 'Latest or Top', 'Latest')
+  .option('--json', 'Output raw JSON')
+  .action(async (username: string, options: { count?: string; product?: string; json?: boolean }) => {
+    try {
+      const product = options.product === 'Top' ? 'Top' : 'Latest';
+      const result = await createOpenTwitterClientFromEnv().getUserTweets(username, parsePositiveInt(options.count, 20), product);
+      if (!result.success) throw new Error(result.error || 'opentwitter user tweets failed');
+      if (options.json) { printJson(result.tweets); return; }
+      printTweets(result.tweets);
+    } catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+twitter
+  .command('search-advanced')
+  .description('Advanced Twitter/X search via opentwitter filters')
+  .option('--keywords <keywords>', 'Search keywords')
+  .option('--from-user <username>', 'Tweets from user')
+  .option('--to-user <username>', 'Tweets to user')
+  .option('--mention-user <username>', 'Tweets mentioning user')
+  .option('--hashtag <hashtag>', 'Hashtag without #')
+  .option('--exclude-replies', 'Exclude replies')
+  .option('--exclude-retweets', 'Exclude retweets')
+  .option('--min-likes <number>', 'Minimum likes')
+  .option('--min-retweets <number>', 'Minimum retweets')
+  .option('--min-replies <number>', 'Minimum replies')
+  .option('--since-date <date>', 'YYYY-MM-DD')
+  .option('--until-date <date>', 'YYYY-MM-DD')
+  .option('--lang <lang>', 'Language code')
+  .option('--product <product>', 'Top or Latest', 'Top')
+  .option('-n, --count <number>', 'Number of tweets', '20')
+  .option('--json', 'Output raw JSON')
+  .action(async (options: any) => {
+    try {
+      const result = await createOpenTwitterClientFromEnv().search({
+        keywords: options.keywords,
+        fromUser: options.fromUser,
+        toUser: options.toUser,
+        mentionUser: options.mentionUser,
+        hashtag: options.hashtag,
+        excludeReplies: boolOption(options.excludeReplies),
+        excludeRetweets: boolOption(options.excludeRetweets),
+        minLikes: options.minLikes ? parsePositiveInt(options.minLikes, 0) : undefined,
+        minRetweets: options.minRetweets ? parsePositiveInt(options.minRetweets, 0) : undefined,
+        minReplies: options.minReplies ? parsePositiveInt(options.minReplies, 0) : undefined,
+        sinceDate: options.sinceDate,
+        untilDate: options.untilDate,
+        lang: options.lang,
+        product: options.product === 'Latest' ? 'Latest' : 'Top',
+        maxResults: parsePositiveInt(options.count, 20),
+      });
+      if (!result.success) throw new Error(result.error || 'opentwitter advanced search failed');
+      if (options.json) { printJson(result.tweets); return; }
+      printTweets(result.tweets);
+    } catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+twitter
+  .command('follower-events <username>')
+  .description('Get follow/unfollow events via opentwitter')
+  .option('--unfollow', 'Fetch unfollower events instead of new followers')
+  .option('-n, --count <number>', 'Number of events', '20')
+  .option('--json', 'Output raw JSON')
+  .action(async (username: string, options: { unfollow?: boolean; count?: string; json?: boolean }) => {
+    try {
+      const data = await createOpenTwitterClientFromEnv().getFollowerEvents(username, !options.unfollow, parsePositiveInt(options.count, 20));
+      printJson(data);
+    } catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+twitter
+  .command('article <id>')
+  .description('Get Twitter/X Article by ID via opentwitter')
+  .option('--json', 'Output raw JSON')
+  .action(async (id: string) => {
+    try { printJson(await createOpenTwitterClientFromEnv().getArticleById(id)); }
+    catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+twitter
+  .command('quotes <tweetId>')
+  .description('Get quote tweets for a tweet ID via opentwitter')
+  .option('-n, --count <number>', 'Number of quote tweets', '20')
+  .option('--json', 'Output raw JSON')
+  .action(async (tweetId: string, options: { count?: string; json?: boolean }) => {
+    try {
+      const result = await createOpenTwitterClientFromEnv().getQuoteTweetsById(tweetId, parsePositiveInt(options.count, 20));
+      if (!result.success) throw new Error(result.error || 'opentwitter quote tweets failed');
+      if (options.json) { printJson(result.tweets); return; }
+      printTweets(result.tweets);
+    } catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+twitter
+  .command('retweet-users <tweetId>')
+  .description('Get users who retweeted a tweet via opentwitter')
+  .option('--cursor <cursor>', 'Pagination cursor')
+  .option('--json', 'Output raw JSON')
+  .action(async (tweetId: string, options: { cursor?: string }) => {
+    try { printJson(await createOpenTwitterClientFromEnv().getRetweetUsersById(tweetId, options.cursor)); }
+    catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+twitter
+  .command('watch')
+  .description('Get all monitored Twitter/X users via opentwitter')
+  .option('--json', 'Output raw JSON')
+  .action(async () => {
+    try { printJson(await createOpenTwitterClientFromEnv().getWatch()); }
+    catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+twitter
+  .command('watch-add <username>')
+  .description('Add a Twitter/X user to opentwitter watch list')
+  .option('--new-tweet', 'Monitor new tweets')
+  .option('--new-follow', 'Monitor new followers')
+  .option('--new-unfollow', 'Monitor unfollowers')
+  .option('--new-reply', 'Monitor tweet replies')
+  .option('--new-quote', 'Monitor quote tweets')
+  .option('--new-retweet', 'Monitor retweets')
+  .option('--update-name', 'Monitor username/name changes')
+  .option('--update-desc', 'Monitor description changes')
+  .option('--update-avatar', 'Monitor avatar changes')
+  .option('--update-banner', 'Monitor banner changes')
+  .option('--new-ca', 'Monitor CA events')
+  .option('--tweet-topping', 'Monitor tweet pinning events')
+  .option('--json', 'Output raw JSON')
+  .action(async (username: string, options: any) => {
+    try {
+      const data = await createOpenTwitterClientFromEnv().addWatch(username, {
+        newTweetBol: boolOption(options.newTweet),
+        newFlwBol: boolOption(options.newFollow),
+        newUnFlwBol: boolOption(options.newUnfollow),
+        newTweetReplyBol: boolOption(options.newReply),
+        newTweetQuoteBol: boolOption(options.newQuote),
+        newRetweetBol: boolOption(options.newRetweet),
+        updateNameBol: boolOption(options.updateName),
+        updateDescBol: boolOption(options.updateDesc),
+        updateAvatarBol: boolOption(options.updateAvatar),
+        updateBannerBol: boolOption(options.updateBanner),
+        newCaBol: boolOption(options.newCa),
+        tweetToppingBol: boolOption(options.tweetTopping),
+      });
+      printJson(data);
+    } catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+twitter
+  .command('watch-delete <username>')
+  .description('Delete a Twitter/X user from opentwitter watch list')
+  .option('--json', 'Output raw JSON')
+  .action(async (username: string) => {
+    try { printJson(await createOpenTwitterClientFromEnv().deleteWatch(username)); }
+    catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+ twitter
+  .command('whoami')
+  .description('Show configured opentwitter identity hint')
+  .action(async () => {
+    try {
+      createOpenTwitterClientFromEnv();
+      const username = process.env.SOCIALCRABS_TWITTER_USERNAME || process.env.TWITTER_USERNAME;
+      console.log(username ? `opentwitter token configured; username hint: @${username}` : 'opentwitter token configured. Set TWITTER_USERNAME if you want whoami to print a handle.');
+    } catch (e: any) { console.error('Error:', e.message); process.exit(1); }
+  });
+
+twitter
+  .command('mutual-candidates')
+  .description('Generate follow queue candidates from followers you do not follow back')
+  .option('-o, --output <file>', 'Output follow queue JSON file', 'queues/follow.json')
+  .option('--max-followers <number>', 'Maximum followers to inspect', '200')
+  .option('--max-following <number>', 'Maximum following accounts to inspect', '200')
+  .option('--page-size <number>', 'GraphQL page size', '50')
+  .option('--denylist <file>', 'Optional newline-separated denylist')
+  .option('--dry-run', 'Preview candidates without writing output')
+  .option('--json', 'Print candidates as JSON')
+  .action(async () => {
+    console.error('mutual-candidates disabled: the old implementation used authenticated x.com GraphQL followers/following. opentwitter does not provide the full following list needed for safe mutual-follow diffing.');
+    console.error('No browser or x.com page was opened.');
+    process.exit(1);
+  });
+
+twitter
+  .command('auto-publish')
+  .description('Collect recent hot tweets via opentwitter, humanize drafts, prepare image prompts, then publish with xurl API')
+  .requiredOption('--sources <file>', 'Source account list JSON')
+  .requiredOption('--accounts <file>', 'Target account list JSON')
+  .option('--interval-hours <number>', 'Continuous collection interval in hours', '6')
+  .option('--state <file>', 'State file for continuous windows', 'queues/auto-publish-state.json')
+  .option('--count-per-user <number>', 'Tweets to fetch per source user', '20')
+  .option('--min-score <number>', 'Minimum heat score', '1')
+  .option('--max-chars <number>', 'Max characters per final tweet', '220')
+  .option('--posts-per-run <number>', 'How many rotating target accounts to publish per run', '1')
+  .option('--image-path <file>', 'Generated image path to attach to all posts; required for publishing in this CLI version')
+  .option('--resume-plan <file>', 'Resume a saved pending auto-publish plan without re-collecting or reselecting a source tweet')
+  .option('--dry-run', 'Preview plans and image prompts without publishing')
+  .option('--confirm', 'Require confirmation before publishing')
+  .option('--json', 'Output JSON')
+  .action(async (options: { sources: string; accounts: string; intervalHours?: string; state?: string; countPerUser?: string; minScore?: string; maxChars?: string; postsPerRun?: string; imagePath?: string; resumePlan?: string; dryRun?: boolean; confirm?: boolean; json?: boolean }) => {
+    const { execFileSync } = await import('child_process');
+    let pendingPlanPath = options.resumePlan;
+    try {
+      const sources = loadSourceUsers(options.sources);
+      const accounts = loadMultiAccountConfig(options.accounts).accounts;
+      if (sources.length === 0) throw new Error('No enabled source accounts found');
+      if (accounts.length === 0) throw new Error('No enabled target accounts found');
+
+      const statePath = options.state || 'queues/auto-publish-state.json';
+      const intervalHours = parsePositiveInt(options.intervalHours, 6);
+      const state = loadAutoPublishState(statePath);
+      const postsPerRun = parsePositiveInt(options.postsPerRun, 1);
+      const runStartedAt = new Date();
+      const maxChars = parsePositiveInt(options.maxChars, 220);
+      let targetAccounts = selectRotatingTargetAccounts(accounts, state, postsPerRun);
+      let window;
+      let dueSources;
+      let plans;
+
+      if (options.resumePlan) {
+        const pending = loadPendingAutoPublishRun(options.resumePlan);
+        window = pending.window;
+        plans = pending.plans;
+        const wantedSources = new Set(pending.dueSourceUsernames);
+        dueSources = sources.filter((source) => wantedSources.has(source.username.replace(/^@/, '')));
+        const wantedAccounts = new Set(plans.map((plan) => plan.account.replace(/^@/, '')));
+        targetAccounts = accounts.filter((account) => wantedAccounts.has(account.username.replace(/^@/, '')));
+        if (options.json) console.error(`Resuming pending auto-publish plan: ${options.resumePlan}`);
+      } else {
+        if (targetAccounts.length === 0) throw new Error('No enabled rotating target accounts found');
+        window = computeContinuousCollectionWindow(state, runStartedAt, intervalHours);
+        if (!window.due) {
+          const message = `Next continuous ${intervalHours}h collection window is not due yet: ${window.startAt} → ${window.endAt}`;
+          if (options.json) printJson({ due: false, window, statePath });
+          else console.log(message);
+          return;
+        }
+
+        dueSources = filterDueSourceUsers(sources, state, runStartedAt, intervalHours);
+        if (dueSources.length === 0) {
+          const message = `All source users are marked processed within the last ${intervalHours}h; skipping collection.`;
+          if (options.json) printJson({ due: false, reason: 'source-cooldown', statePath, sources: state.sources || {} });
+          else console.log(message);
+          return;
+        }
+
+        const client = createOpenTwitterClientFromEnv();
+        const tweets = [];
+        const countPerUser = parsePositiveInt(options.countPerUser, 20);
+        for (const source of dueSources) {
+          const result = await client.getUserTweets(source.username, countPerUser, 'Latest');
+          if (!result.success) {
+            console.error(`opentwitter skipped @${source.username}: ${result.error}`);
+            continue;
+          }
+          tweets.push(...result.tweets);
+        }
+
+        plans = buildAutoPublishPlans({
+          tweets,
+          accounts: targetAccounts,
+          now: new Date(window.endAt),
+          startAt: new Date(window.startAt),
+          endAt: new Date(window.endAt),
+          minScore: parsePositiveInt(options.minScore, 1),
+          maxChars,
+          excludeSourceTweetIds: getPublishedSourceTweetIds(state),
+        });
+
+        if (plans.length === 0) {
+          if (!options.dryRun) saveAutoPublishState(statePath, markSourceUsersProcessed(buildNextAutoPublishState(state, window), dueSources, runStartedAt));
+          console.log(`No eligible hot tweets found in continuous window ${window.startAt} → ${window.endAt}.`);
+          return;
+        }
+
+        const tweetsById = new Map(tweets.map((tweet) => [tweet.id, tweet]));
+        const accountsByUsername = new Map(targetAccounts.map((account) => [account.username, account]));
+        for (const plan of plans) {
+          const sourceTweet = tweetsById.get(plan.sourceTweetId);
+          const account = accountsByUsername.get(plan.account);
+          if (!sourceTweet || !account) continue;
+          const hermesText = generateAutoPublishTextWithHermes({
+            sourceText: sourceTweet.text,
+            draftText: plan.text,
+            account: plan.account,
+            style: account.style,
+            maxChars,
+          });
+          plan.text = hermesText;
+          plan.imagePrompt = buildImagePromptForTweet(plan.text, plan.imageSkill);
+        }
+      }
+
+      const summary = [
+        `Auto-publish plans: ${plans.length}`,
+        `Window: ${window.startAt} → ${window.endAt}`,
+        ...plans.map((plan, index) => [
+          `\n[${index + 1}] @${plan.account}`,
+          `source: ${plan.sourceUrl}`,
+          `score: ${plan.hotScore}`,
+          `image skill: ${plan.imageSkill}`,
+          plan.text,
+          `image prompt:\n${plan.imagePrompt}`,
+        ].join('\n')),
+      ].join('\n');
+
+      const preview = await previewAction({
+        dryRun: options.dryRun,
+        confirm: options.confirm,
+        summary,
+        run: async () => true,
+      });
+
+      if (!preview.executed) {
+        if (options.json) printJson({ plans, window, statePath, dueSources: dueSources.map((source) => source.username), dryRun: true });
+        else console.log(preview.message);
+        return;
+      }
+
+      if (!options.imagePath) {
+        throw new Error('Publishing requires --image-path. Use the imagePrompt from --dry-run to generate an image, then rerun with --confirm --image-path <file>.');
+      }
+
+      const pendingRun = buildPendingAutoPublishRun({
+        statePath,
+        window,
+        dueSources,
+        plans,
+        imagePath: options.imagePath,
+        createdAt: runStartedAt,
+      });
+      pendingPlanPath = pendingPlanPath || defaultPendingAutoPublishRunPath(statePath, pendingRun);
+      savePendingAutoPublishRun(pendingPlanPath, pendingRun);
+      console.error(`Saved pending auto-publish plan: ${pendingPlanPath}`);
+
+      const results = [];
+      for (const plan of plans) {
+        const xurlAccountArgs = buildXurlAccountArgs(plan.account, plan.xurlApp);
+        const uploadOutput = execFileSync('xurl', [...xurlAccountArgs, 'media', 'upload', options.imagePath], { encoding: 'utf-8' });
+        const mediaId = /Media ID:\s*(\d+)/.exec(uploadOutput)?.[1] || JSON.parse(extractJsonObjectFromOutput(uploadOutput)).data?.id;
+        if (!mediaId) throw new Error(`Could not parse media id for @${plan.account}`);
+        const postOutput = execFileSync('xurl', [...xurlAccountArgs, 'post', plan.text, '--media-id', String(mediaId)], { encoding: 'utf-8' });
+        const tweetId = extractIdFromXurlPostOutput(postOutput);
+        const url = tweetId ? `https://x.com/${plan.account}/status/${tweetId}` : undefined;
+        const square = url && plan.squareAlias
+          ? postToBinanceSquare({ alias: plan.squareAlias, text: plan.text, tweetUrl: url, imagePaths: [options.imagePath] })
+          : undefined;
+        results.push({ ...plan, mediaId, tweetId, url, postedUrl: url, square, status: url ? 'posted' : 'error' });
+        if (url) {
+          await sendTelegramSuccessNotification(buildXAutoPublishSuccessTelegramMessage({
+            account: plan.account,
+            postedUrl: url,
+            sourceUrl: plan.sourceUrl,
+            text: plan.text,
+            squareLink: square?.success ? (square.link || square.id) : undefined,
+          }));
+        }
+        appendActionLog(ACTION_LOG_PATH, {
+          platform: 'twitter',
+          action: 'auto-publish',
+          target: `@${plan.account}`,
+          status: url ? 'success' : 'error',
+          url,
+          source: plan.sourceUrl,
+        });
+      }
+
+      let nextState = buildNextAutoPublishState(state, window);
+      nextState = markSourceUsersProcessed(nextState, dueSources, runStartedAt);
+      nextState = markAutoPublishPlansPosted(nextState, results, runStartedAt);
+      nextState = advanceTargetAccountCursor(nextState, accounts, results.filter((result) => result.status === 'posted').length);
+      saveAutoPublishState(statePath, nextState);
+      if (pendingPlanPath) deletePendingAutoPublishRun(pendingPlanPath);
+
+      if (options.json) printJson({ results, window, statePath, pendingPlanPath: undefined });
+      else {
+        console.log(`Posted ${results.filter((result) => result.status === 'posted').length}/${results.length} account(s).`);
+        for (const result of results) {
+          console.log(`${result.status === 'posted' ? '✅' : '❌'} @${result.account}: ${result.url || 'failed'}`);
+          if (result.square) console.log(`  Binance Square: ${result.square.success ? (result.square.link || result.square.id || 'posted') : `failed: ${result.square.error}`}`);
+        }
+      }
+    } catch (e: any) {
+      console.error('Error:', e.message);
+      if (pendingPlanPath) console.error(`Pending auto-publish plan kept for retry: ${pendingPlanPath}`);
+      appendActionLog(ACTION_LOG_PATH, {
+        platform: 'twitter',
+        action: 'auto-publish',
+        target: options.sources,
+        status: 'error',
+        error: e.message,
+      });
+      process.exit(1);
+    }
+  });
+
+twitter
+  .command('multi-account-pipeline')
+  .description('Collect one text-only source tweet and draft/post distinct API tweets for multiple bound X accounts')
+  .requiredOption('--source <handle>', 'Source X handle or URL to collect from')
+  .requiredOption('--accounts <file>', 'JSON file with target accounts')
+  .option('-n, --count <number>', 'Number of source tweets to inspect', '10')
+  .option('--max-chars <number>', 'Max characters per generated tweet, keep short for images', '200')
+  .option('--dry-run', 'Preview per-account posts without publishing')
+  .option('--confirm', 'Require confirmation before publishing')
+  .option('--json', 'Print JSON plan/result')
+  .action(async (options: { source: string; accounts: string; count?: string; maxChars?: string; dryRun?: boolean; confirm?: boolean; json?: boolean }) => {
+    const { execFileSync } = await import('child_process');
+    try {
+      const accountConfig = loadMultiAccountConfig(options.accounts);
+      if (accountConfig.accounts.length === 0) {
+        console.log('No enabled target accounts found.');
+        return;
+      }
+
+      const count = parsePositiveInt(options.count, 10);
+      const maxChars = parsePositiveInt(options.maxChars, 200);
+      const client = createOpenTwitterClientFromEnv();
+      const searchOptions = buildOpenTwitterSourceSearchOptions(options.source, count);
+      const result = await client.search(searchOptions);
+      if (!result.success) throw new Error(result.error || 'opentwitter source search failed');
+      const tweets = selectTextOnlyTweets(normalizeOpenTwitterTweets(result.tweets, options.source), 1);
+      const sourceTweet = tweets[0];
+      if (!sourceTweet) {
+        console.log(`No text-only source tweets found for ${options.source}.`);
+        return;
+      }
+
+      const posts = buildMultiAccountPosts({ sourceTweet, accounts: accountConfig.accounts, maxChars });
+      const summary = [
+        `Source: @${sourceTweet.sourceUser} ${sourceTweet.url}`,
+        `Selected text: ${sourceTweet.text}`,
+        `Targets: ${posts.map((post) => `@${post.account}`).join(', ')}`,
+        ...posts.map((post, index) => `\n[${index + 1}] @${post.account}\n${post.text}`),
+      ].join('\n');
+
+      const preview = await previewAction({
+        dryRun: options.dryRun,
+        confirm: options.confirm,
+        summary,
+        run: async () => true,
+      });
+
+      if (!preview.executed) {
+        if (options.json) console.log(JSON.stringify({ sourceTweet, posts, dryRun: true }, null, 2));
+        else console.log(preview.message);
+        return;
+      }
+
+      const results = [];
+      for (const post of posts) {
+        const output = execFileSync('xurl', ['--username', post.account, 'post', post.text], { encoding: 'utf-8' });
+        const tweetId = extractIdFromXurlPostOutput(output);
+        results.push({
+          ...post,
+          status: tweetId ? 'posted' : 'error',
+          tweetId,
+          url: tweetId ? `https://x.com/${post.account}/status/${tweetId}` : undefined,
+          raw: output,
+        });
+        if (tweetId) {
+          await sendTelegramSuccessNotification(buildXAutoPublishSuccessTelegramMessage({
+            account: post.account,
+            postedUrl: `https://x.com/${post.account}/status/${tweetId}`,
+            sourceUrl: sourceTweet.url,
+            text: post.text,
+          }));
+        }
+        appendActionLog(ACTION_LOG_PATH, {
+          platform: 'twitter',
+          action: 'multi-account-pipeline',
+          target: `@${post.account}`,
+          status: tweetId ? 'success' : 'error',
+          url: tweetId ? `https://x.com/${post.account}/status/${tweetId}` : undefined,
+          source: sourceTweet.url,
+        });
+      }
+
+      if (options.json) console.log(JSON.stringify({ sourceTweet, results }, null, 2));
+      else {
+        console.log(`Posted ${results.filter((result) => result.status === 'posted').length}/${results.length} account(s).`);
+        for (const result of results) console.log(`${result.status === 'posted' ? '✅' : '❌'} @${result.account}: ${result.url || 'failed'}`);
+      }
+    } catch (e: any) {
+      console.error('Error:', e.message);
+      appendActionLog(ACTION_LOG_PATH, {
+        platform: 'twitter',
+        action: 'multi-account-pipeline',
+        target: options.source,
+        status: 'error',
+        error: e.message,
+      });
+      process.exit(1);
+    }
+  });
+
+ twitter
   .command('read <url>')
   .description('Read a specific tweet by URL or ID')
   .option('--json', 'Output raw JSON')
   .action(async (url: string, options: { json?: boolean }) => {
-    const { createClientFromEnv, extractTweetId } = await import('./graphql/index.js');
     try {
-      const client = createClientFromEnv();
+      const client = createOpenTwitterClientFromEnv();
       const tweetId = extractTweetId(url);
-      const result = await client.getTweetDetail(tweetId);
+      const result = await client.getTweetById(tweetId);
       if (!result.success) { console.error('Error:', result.error); process.exit(1); }
       if (options.json) { console.log(JSON.stringify(result.tweet, null, 2)); return; }
       const t = result.tweet!;

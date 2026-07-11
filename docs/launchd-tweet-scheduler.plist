@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.socialcrabs.tweet-scheduler</string>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/openai/socialcrabs</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/node</string>
+    <string>/Users/openai/socialcrabs/dist/cli.js</string>
+    <string>x</string>
+    <string>tweet-scheduler</string>
+    <string>--queue</string>
+    <string>queues/tweets.json</string>
+    <string>--state</string>
+    <string>state/tweet-scheduler.json</string>
+    <string>--min-hours</string>
+    <string>6</string>
+    <string>--max-hours</string>
+    <string>8</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/openai/.local/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+    <key>XURL_BIN</key>
+    <string>/Users/openai/.local/bin/xurl</string>
+  </dict>
+
+  <key>StartInterval</key>
+  <integer>900</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/openai/socialcrabs/logs/tweet-scheduler.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/openai/socialcrabs/logs/tweet-scheduler.err.log</string>
+</dict>
+</plist>

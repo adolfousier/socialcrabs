@@ -1,0 +1,162 @@
+{
+  "lastWindowStartAt": "2026-07-08T05:15:52.420Z",
+  "lastWindowEndAt": "2026-07-08T08:15:52.420Z",
+  "sources": {
+    "LuBtc888": {
+      "lastProcessedAt": "2026-07-08T11:55:20.987Z"
+    },
+    "ityouknows": {
+      "lastProcessedAt": "2026-07-08T11:55:20.987Z"
+    },
+    "BTCdayu": {
+      "lastProcessedAt": "2026-07-08T11:55:20.987Z"
+    },
+    "erchenlu1": {
+      "lastProcessedAt": "2026-07-08T11:55:20.987Z"
+    },
+    "mars_bnb": {
+      "lastProcessedAt": "2026-07-08T11:55:20.987Z"
+    },
+    "ai_xiaomu": {
+      "lastProcessedAt": "2026-07-08T11:55:20.987Z"
+    },
+    "blockheadchain_": {
+      "lastProcessedAt": "2026-07-08T11:55:20.987Z"
+    }
+  },
+  "targetAccountCursor": 0,
+  "publishedSourceTweets": {
+    "2074313199386546538": {
+      "sourceUser": "ai_xiaomu",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074313199386546538",
+      "firstPostedAt": "2026-07-07T04:43:58.000Z",
+      "accounts": {
+        "yoyo_aigo": {
+          "postedAt": "2026-07-07T04:43:58.000Z",
+          "postedUrl": "https://x.com/yoyo_aigo/status/2074353708683628782"
+        }
+      }
+    },
+    "2074345026352513228": {
+      "sourceUser": "erchenlu1",
+      "sourceUrl": "https://x.com/erchenlu1/status/2074345026352513228",
+      "firstPostedAt": "2026-07-07T05:08:58.000Z",
+      "accounts": {
+        "blockheadchain_": {
+          "postedAt": "2026-07-07T05:08:58.000Z",
+          "postedUrl": "https://x.com/blockheadchain_/status/2074360031475376581"
+        }
+      }
+    },
+    "2074283503932547520": {
+      "sourceUser": "ai_xiaomu",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074283503932547520",
+      "firstPostedAt": "2026-07-07T05:29:59.000Z",
+      "accounts": {
+        "yoyo_aigo": {
+          "postedAt": "2026-07-07T05:29:59.000Z",
+          "postedUrl": "https://x.com/yoyo_aigo/status/2074365295561707814"
+        }
+      }
+    },
+    "2074388948751655035": {
+      "sourceUser": "ai_xiaomu",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074388948751655035",
+      "firstPostedAt": "2026-07-07T10:24:44.344Z",
+      "accounts": {
+        "yoyo_aigo": {
+          "postedAt": "2026-07-07T10:24:44.344Z",
+          "postedUrl": "https://x.com/yoyo_aigo/status/2074439507613728983"
+        }
+      }
+    },
+    "2074377926628303303": {
+      "sourceUser": "erchenlu1",
+      "sourceUrl": "https://x.com/erchenlu1/status/2074377926628303303",
+      "firstPostedAt": "2026-07-07T10:25:30.000Z",
+      "accounts": {
+        "blockheadchain_": {
+          "postedAt": "2026-07-07T10:25:30.000Z",
+          "postedUrl": "https://x.com/blockheadchain_/status/2074439657660760442"
+        }
+      }
+    },
+    "2074403796399407534": {
+      "sourceUser": "ai_xiaomu",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074403796399407534",
+      "firstPostedAt": "2026-07-07T14:38:48.250Z",
+      "accounts": {
+        "yoyo_aigo": {
+          "postedAt": "2026-07-07T14:38:48.250Z",
+          "postedUrl": "https://x.com/yoyo_aigo/status/2074503461916529105"
+        }
+      }
+    },
+    "2074470990822994215": {
+      "sourceUser": "erchenlu1",
+      "sourceUrl": "https://x.com/erchenlu1/status/2074470990822994215",
+      "firstPostedAt": "2026-07-07T14:39:48.767Z",
+      "accounts": {
+        "blockheadchain_": {
+          "postedAt": "2026-07-07T14:39:48.767Z",
+          "postedUrl": "https://x.com/blockheadchain_/status/2074503726388384110"
+        }
+      }
+    },
+    "2074507871019053346": {
+      "sourceUser": "erchenlu1",
+      "sourceUrl": "https://x.com/erchenlu1/status/2074507871019053346",
+      "firstPostedAt": "2026-07-07T18:27:23.747Z",
+      "accounts": {
+        "yoyo_aigo": {
+          "postedAt": "2026-07-07T18:27:23.747Z",
+          "postedUrl": "https://x.com/yoyo_aigo/status/2074560986791739403"
+        }
+      }
+    },
+    "2074509493610651731": {
+      "sourceUser": "ai_xiaomu",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074509493610651731",
+      "firstPostedAt": "2026-07-07T18:29:10.213Z",
+      "accounts": {
+        "blockheadchain_": {
+          "postedAt": "2026-07-07T18:29:10.213Z",
+          "postedUrl": "https://x.com/blockheadchain_/status/2074561424454783145"
+        }
+      }
+    },
+    "2074682383001878545": {
+      "sourceUser": "erchenlu1",
+      "sourceUrl": "https://x.com/erchenlu1/status/2074682383001878545",
+      "firstPostedAt": "2026-07-08T07:33:55.025Z",
+      "accounts": {
+        "yoyo_aigo": {
+          "postedAt": "2026-07-08T07:33:55.025Z",
+          "postedUrl": "https://x.com/yoyo_aigo/status/2074758931793215654"
+        }
+      }
+    },
+    "2074691190427959462": {
+      "sourceUser": "ai_xiaomu",
+      "sourceUrl": "https://x.com/ai_xiaomu/status/2074691190427959462",
+      "firstPostedAt": "2026-07-08T07:39:44.156Z",
+      "accounts": {
+        "blockheadchain_": {
+          "postedAt": "2026-07-08T07:39:44.156Z",
+          "postedUrl": "https://x.com/blockheadchain_/status/2074760404275003553"
+        }
+      }
+    },
+    "2074742780371648615": {
+      "sourceUser": "erchenlu1",
+      "sourceUrl": "https://x.com/erchenlu1/status/2074742780371648615",
+      "firstPostedAt": "2026-07-08T11:55:20.987Z",
+      "accounts": {
+        "yoyo_aigo": {
+          "postedAt": "2026-07-08T11:55:20.987Z",
+          "postedUrl": "https://x.com/yoyo_aigo/status/2074824776343032277"
+        }
+      }
+    }
+  }
+}

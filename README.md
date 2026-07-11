@@ -272,7 +272,7 @@ npm start
 > |----------|--------|
 > | Instagram | 🟡 Production - use responsibly |
 > | LinkedIn | 🟡 Production - use responsibly |
-> | Twitter/X | 🟡 Production - use responsibly (likes, follows, replies via Playwright; search/read via built-in GraphQL client) |
+> | Twitter/X | 🟡 Production - use responsibly (likes, follows, replies via Playwright; posting tweets via X API/xurl only; search/read via built-in GraphQL client) |
 
 ### 🤖 AI Agent Instructions
 
@@ -308,11 +308,15 @@ node dist/cli.js linkedin connect <profile-url>   # Works for 3rd degree too
 node dist/cli.js linkedin search <query>          # Search posts/articles
 node dist/cli.js linkedin engage --query=<query>  # Full engagement session
 
-# Twitter/X - Write (Playwright)
+# Twitter/X - Write
 node dist/cli.js x like <tweet-url>
-node dist/cli.js x tweet "Your tweet"
+node dist/cli.js x tweet "Your tweet"              # Posts via X API/xurl only
+node dist/cli.js x tweet-queue queues/tweets.json   # Posts via X API/xurl only
 node dist/cli.js x follow <username>
 node dist/cli.js x reply <tweet-url> "Your reply"
+
+# Browser-based tweet publishing is intentionally disabled.
+# Configure xurl / X API before using x tweet, tweet-queue, or tweet-scheduler.
 
 # Twitter/X - Read (GraphQL, no browser needed)
 node dist/cli.js x search "query" -n 10           # Search tweets
@@ -557,7 +561,7 @@ await claw.shutdown();
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/twitter/like` | Like a tweet |
-| POST | `/api/twitter/tweet` | Post a tweet |
+| POST | `/api/twitter/tweet` | Post a tweet via X API/xurl only |
 | POST | `/api/twitter/reply` | Reply to a tweet |
 | POST | `/api/twitter/retweet` | Retweet |
 | POST | `/api/twitter/follow` | Follow a user |

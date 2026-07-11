@@ -52,6 +52,13 @@ export interface UserResult {
   error?: string;
 }
 
+export interface UserListResult {
+  success: boolean;
+  users: XUser[];
+  error?: string;
+  nextCursor?: string;
+}
+
 export interface XClientOptions {
   authToken: string;
   ct0: string;

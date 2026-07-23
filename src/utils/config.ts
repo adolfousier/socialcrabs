@@ -76,6 +76,14 @@ export function loadConfig(): ResolvedConfig {
         post: getEnvNumber('RATE_LIMIT_LINKEDIN_POST', 5),
         connect: getEnvNumber('RATE_LIMIT_LINKEDIN_CONNECT', 15),
       },
+      tiktok: {
+        like: getEnvNumber('RATE_LIMIT_TIKTOK_LIKE', 200),
+        comment: getEnvNumber('RATE_LIMIT_TIKTOK_COMMENT', 50),
+        follow: getEnvNumber('RATE_LIMIT_TIKTOK_FOLLOW', 30),
+        dm: getEnvNumber('RATE_LIMIT_TIKTOK_DM', 10),
+        post: getEnvNumber('RATE_LIMIT_TIKTOK_POST', 5),
+        connect: 0,
+      },
     },
     delays: {
       minMs: getEnvNumber('DELAY_MIN_MS', 1500),

@@ -3,6 +3,7 @@ import { RateLimiter, DEFAULT_RATE_LIMITS } from './utils/rate-limiter.js';
 import { InstagramHandler } from './platforms/instagram.js';
 import { TwitterHandler } from './platforms/twitter.js';
 import { LinkedInHandler } from './platforms/linkedin.js';
+import { TikTokHandler } from './platforms/tiktok.js';
 import { createHttpServer } from './server/http.js';
 import { WebSocketManager } from './server/websocket.js';
 import { initLogger, log } from './utils/logger.js';
@@ -33,6 +34,7 @@ export class SocialCrabs {
   public instagram: InstagramHandler;
   public twitter: TwitterHandler;
   public linkedin: LinkedInHandler;
+  public tiktok: TikTokHandler;
 
   constructor(config?: SocialCrabsConfig) {
     // Load and merge config
@@ -44,6 +46,7 @@ export class SocialCrabs {
         instagram: { ...defaultConfig.rateLimits.instagram, ...config?.rateLimits?.instagram },
         twitter: { ...defaultConfig.rateLimits.twitter, ...config?.rateLimits?.twitter },
         linkedin: { ...defaultConfig.rateLimits.linkedin, ...config?.rateLimits?.linkedin },
+        tiktok: { ...defaultConfig.rateLimits.tiktok, ...config?.rateLimits?.tiktok },
       },
       delays: { ...defaultConfig.delays, ...config?.delays },
       session: { ...defaultConfig.session, ...config?.session },
@@ -81,6 +84,7 @@ export class SocialCrabs {
       instagram: { ...DEFAULT_RATE_LIMITS.instagram, ...this.config.rateLimits.instagram },
       twitter: { ...DEFAULT_RATE_LIMITS.twitter, ...this.config.rateLimits.twitter },
       linkedin: { ...DEFAULT_RATE_LIMITS.linkedin, ...this.config.rateLimits.linkedin },
+      tiktok: { ...DEFAULT_RATE_LIMITS.tiktok, ...this.config.rateLimits.tiktok },
     };
     this.rateLimiter = new RateLimiter(rateLimits, `${this.config.session.dir}/rate-limits.json`);
 
@@ -88,6 +92,7 @@ export class SocialCrabs {
     this.instagram = new InstagramHandler(this.browserManager, this.rateLimiter);
     this.twitter = new TwitterHandler(this.browserManager, this.rateLimiter);
     this.linkedin = new LinkedInHandler(this.browserManager, this.rateLimiter);
+    this.tiktok = new TikTokHandler(this.browserManager, this.rateLimiter);
 
     log.info('SocialCrabs initialized', {
       headless: this.config.browser.headless,
@@ -143,6 +148,8 @@ export class SocialCrabs {
         return this.twitter.isLoggedIn();
       case 'linkedin':
         return this.linkedin.isLoggedIn();
+      case 'tiktok':
+        return this.tiktok.isLoggedIn();
       default:
         throw new Error(`Unknown platform: ${platform}`);
     }
@@ -159,6 +166,8 @@ export class SocialCrabs {
         return this.twitter.login();
       case 'linkedin':
         return this.linkedin.login();
+      case 'tiktok':
+        return this.tiktok.login();
       default:
         throw new Error(`Unknown platform: ${platform}`);
     }
@@ -179,6 +188,8 @@ export class SocialCrabs {
         return this.twitter.loginWithCredentials(username, password);
       case 'linkedin':
         return this.linkedin.loginWithCredentials(username, password);
+      case 'tiktok':
+        return this.tiktok.loginWithCredentials(username, password);
       default:
         throw new Error(`Unknown platform: ${platform}`);
     }
@@ -197,6 +208,9 @@ export class SocialCrabs {
         break;
       case 'linkedin':
         await this.linkedin.logout();
+        break;
+      case 'tiktok':
+        await this.tiktok.logout();
         break;
       default:
         throw new Error(`Unknown platform: ${platform}`);
@@ -223,6 +237,10 @@ export class SocialCrabs {
       linkedin: {
         loggedIn: await this.isLoggedIn('linkedin').catch(() => false),
         rateLimits: this.rateLimiter.getStatus('linkedin'),
+      },
+      tiktok: {
+        loggedIn: await this.isLoggedIn('tiktok').catch(() => false),
+        rateLimits: this.rateLimiter.getStatus('tiktok'),
       },
     };
 

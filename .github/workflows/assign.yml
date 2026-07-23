@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: Assign adolfousier
         run: |
-          gh api repos/${{ github.repository }}/issues/${{ github.event.number }} -X PATCH -f assignees[]="adolfousier"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            gh api repos/${{ github.repository }}/pulls/${{ github.event.number }} -X PATCH -f add_assignees[]="adolfousier"
+          else
+            gh api repos/${{ github.repository }}/issues/${{ github.event.number }} -X PATCH -f add_assignees[]="adolfousier"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

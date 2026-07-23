@@ -384,7 +384,7 @@ export abstract class BasePlatformHandler {
 
   // Abstract methods that must be implemented by each platform
   abstract isLoggedIn(): Promise<boolean>;
-  abstract login(): Promise<boolean>;
+  abstract login(username?: string, password?: string): Promise<boolean>;
   abstract logout(): Promise<void>;
   abstract like(payload: LikePayload): Promise<ActionResult>;
   abstract comment(payload: CommentPayload): Promise<ActionResult>;

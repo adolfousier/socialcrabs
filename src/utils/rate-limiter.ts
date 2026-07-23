@@ -236,4 +236,11 @@ export const DEFAULT_RATE_LIMITS: Record<Platform, Record<string, number>> = {
     dm: 40,
     post: 5,
   },
+  tiktok: {
+    like: 200,
+    comment: 50,
+    follow: 30,
+    dm: 10,
+    post: 5,
+  },
 };

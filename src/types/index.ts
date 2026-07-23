@@ -4,7 +4,7 @@ import type { Page, BrowserContext } from 'playwright';
 // Platform Types
 // ============================================================================
 
-export type Platform = 'instagram' | 'twitter' | 'linkedin';
+export type Platform = 'instagram' | 'twitter' | 'linkedin' | 'tiktok';
 
 export type ActionType =
   | 'like'
@@ -56,6 +56,7 @@ export interface RateLimitConfig {
   instagram: PlatformRateLimits;
   twitter: PlatformRateLimits;
   linkedin: PlatformRateLimits;
+  tiktok: PlatformRateLimits;
 }
 
 export interface PlatformRateLimits {
@@ -357,4 +358,37 @@ export interface EventPayload {
   event: SocialCrabsEvent;
   data: Record<string, unknown>;
   timestamp: number;
+}
+
+// ============================================================================
+// TikTok Types
+// ============================================================================
+
+export interface TikTokPostPayload {
+  text: string;
+  media?: string[];
+  hashtags?: string[];
+  mentions?: string[];
+  visibility?: 'public' | 'private' | 'friends';
+  commentControl?: 'all' | 'following' | 'off';
+  duet?: boolean;
+  stitch?: boolean;
+}
+
+export interface TikTokEngagementPayload {
+  url: string;
+  text?: string;
+}
+
+export interface TikTokProfile {
+  username: string;
+  displayName: string;
+  bio: string;
+  avatar: string;
+  followers: number;
+  following: number;
+  likes: number;
+  posts: number;
+  verified: boolean;
+  isPrivate: boolean;
 }
